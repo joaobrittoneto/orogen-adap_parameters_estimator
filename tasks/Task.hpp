@@ -4,6 +4,9 @@
 #define ADAP_PARAMETERS_ESTIMATOR_TASK_TASK_HPP
 
 #include "adap_parameters_estimator/TaskBase.hpp"
+#include "adap_parameters_estimator/adap_parameters.hpp"
+#include "base/commands/Joints.hpp"
+#include "base/samples/RigidBodyState.hpp"
 
 namespace adap_parameters_estimator {
 
@@ -25,8 +28,23 @@ namespace adap_parameters_estimator {
     {
 	friend class TaskBase;
     protected:
+		// variables used from property.
+		double sampTime;
+		double frequencyTau;
+		Eigen::Matrix<double, 6, 4, Eigen::DontAlign> gainLambda;
+		Eigen::Matrix<double, 6, 1, Eigen::DontAlign> gainA;
+		DOFS dof;
 
+		// adaptive method variables
+		adap_parameters_estimator::AdapParameters *adapParam;
 
+		//variables for reading and writing
+		base::samples::Joints thruster_samples;
+		base::samples::RigidBodyState uwvstate;
+
+		adap_parameters_estimator::Parameters parameters;
+
+		int interaction;
 
     public:
         /** TaskContext constructor for Task

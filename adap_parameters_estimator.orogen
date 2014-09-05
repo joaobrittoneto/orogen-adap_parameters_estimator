@@ -30,7 +30,15 @@ task_context "Task" do
     # A configuration property (here, a std::string). Its value can be retrieved
     # in the C++ code with # _config_value.get() and _config_value.set(new_value).
     ##property "config_value", "/std/string"
-
+	## property "gA", "Eigen::Matrix<double, 6, 1, Eigen::DontAlign>"
+	## property "gLambda", "Eigen::Matrix<double, 6, 4, Eigen::DontAlign>"
+	property "gA", "base::VectorXd"
+	property "gLambda", "base::MatrixXd"
+	property "dofs", "adap_parameters_estimator::DOFS"
+	property "sTime", "double", 0.01
+	property "ftau", "double"
+	
+		
     # An input port, i.e. an object from which the component gets data from
     # other components' outputs
     #
@@ -41,7 +49,7 @@ task_context "Task" do
     input_port "thruster_samples", "base/samples/Joints"
 	    doc "Samples of thruster actions"
 	#    needs_reliable_connection
-    input_port "uwvstate", "base/samples/RigidBodyState"
+    input_port "speed_samples", "base/samples/RigidBodyState"
 		doc "Measured intput containing position, velocity, orientation"
 
     # An output port, i.e. an object to which the component pushes data so that
@@ -56,6 +64,6 @@ task_context "Task" do
     # port gets data, uncomment this and comment the 'periodic' line
     # port_driven "input"
     # By default, the task will be periodic with a period of 0.1
-    periodic 0.01
+    periodic 0.001
 end
 
