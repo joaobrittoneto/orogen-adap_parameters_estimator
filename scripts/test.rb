@@ -1,12 +1,14 @@
 #***********************************************************************/
 # Ruby's code for adaptive parameters identification of auv            */
 #                                                                      */
+#   inputs (thruster and speed) come from sinus functions              */
+#                                                                      */
 # FILE --- test.rb                                                     */
 #                                                                      */
 # PURPOSE --- Tests for the adaptive method component                  */
 #                                                                      */
 #  João Da Costa Britto Neto                                           */
-#  joao.neto@dfki.de                                               */
+#  joao.neto@dfki.de                                                   */
 #  DFKI - BREMEN 2014                                                  */
 #***********************************************************************/
 

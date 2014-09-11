@@ -41,7 +41,7 @@ bool Task::configureHook()
     	adapParam = new AdapParameters(sampTime, frequencyTau, gainLambda, gainA, dof);
 
     	interaction = 0;
-
+    	//deltaV = 0;
 
     	return true;
     }
@@ -66,8 +66,8 @@ void Task::updateHook()
     	 modelParameters.linearDampingCoeff[i].positive = 0;
     	 modelParameters.linearDampingCoeff[i].negative = 0;
     	}
-    modelParameters.gravityAndBuoyancy = base::Vector6d::Zero();
-    modelParameters.coriolisCentripetalMatrix = base::Matrix6d::Zero();
+    modelParameters.gravityAndBuoyancy = base::VectorXd::Zero(6);
+    modelParameters.coriolisCentripetalMatrix = base::MatrixXd::Zero(6,6);
 
     base::samples::RigidBodyState inputSpeed;
     base::samples::Joints inputThruster;
@@ -75,6 +75,7 @@ void Task::updateHook()
     base::Vector6d velocity;
     base::Vector6d tau;
 
+    double deltaV;
 
 	if (_speed_samples.readNewest(inputSpeed) == RTT::NewData)
 	{
@@ -105,28 +106,37 @@ void Task::updateHook()
 	adapParam->euler_parameters();
 	adapParam->convetional_parameters();
 	adapParam->filter_parameters(interaction);
+
 	interaction++;
+	//deltaV =  adapParam->get_delta_v();
 
-
-	std::cout << std::endl << "===================="<< std::endl;
-	std::cout << std::endl << "DELTA_v: "<< adapParam->get_delta_v() << std::endl << std::endl;
+	//std::cout << std::endl << "===================="<< std::endl;
+	//std::cout << std::endl << "DELTA_v: "<< adapParam->get_delta_v() << std::endl << std::endl;
 	//std::cout << std::endl << "estPhi: " << adapParam->get_est_phi() << std::endl << std::endl;
 	//std::cout << std::endl << "adapParam fTau: "<< adapParam->get_fTau() << std::endl << std::endl;
-	std::cout << std::endl << "Estimated States: "<< std::endl << adapParam->get_est_states() << std::endl << std::endl;
+	//std::cout << std::endl << "Estimated States: "<< std::endl << adapParam->get_est_states() << std::endl << std::endl;
 	//std::cout << std::endl << "estVelocity: "<< std::endl << adapParam->get_est_velocity() << std::endl << std::endl;
-	std::cout << std::endl << "Filtered Parameters: "<< std::endl << adapParam->get_filtered_parameters() << std::endl << std::endl;
+	//std::cout << std::endl << "Filtered Parameters: "<< std::endl << adapParam->get_filtered_parameters() << std::endl << std::endl;
 	//std::cout << std::endl << "Parameters: "<< std::endl << adapParam->get_parameters() << std::endl << std::endl;
 
-	std::cout << std::endl << "REAL velocity: "<< velocity[dof] << std::endl << std::endl;
+	//std::cout << std::endl << "REAL velocity: "<< velocity[dof] << std::endl << std::endl;
 
 	modelParameters.inertiaCoeff[dof].positive           = adapParam->get_filtered_parameters()[0];
 	modelParameters.quadraticDampingCoeff[dof].positive  = adapParam->get_filtered_parameters()[1];
 	modelParameters.linearDampingCoeff[dof].positive     = adapParam->get_filtered_parameters()[2];
 	modelParameters.gravityAndBuoyancy[dof]              = adapParam->get_filtered_parameters()[3];
-
+/*
+	modelParameters.inertiaCoeff[dof].positive           = adapParam->get_parameters()[0];
+	modelParameters.quadraticDampingCoeff[dof].positive  = adapParam->get_parameters()[1];
+	modelParameters.linearDampingCoeff[dof].positive     = adapParam->get_parameters()[2];
+	modelParameters.gravityAndBuoyancy[dof]              = adapParam->get_parameters()[3];
+*/
+	//std::cout << std::endl << "teste2 TASK.CPP: "<< std::endl << modelParameters.gravityAndBuoyancy[dof] << std::endl << std::endl;
 
 	_parameters.write(modelParameters);
 
+	deltaV = adapParam->get_delta_v();
+	_deltaV.write(deltaV);
 
 }
 void Task::errorHook()
@@ -141,3 +151,11 @@ void Task::cleanupHook()
 {
     TaskBase::cleanupHook();
 }
+
+double Task::get_deltaV()
+{
+	return adapParam->get_delta_v();
+}
+
+
+

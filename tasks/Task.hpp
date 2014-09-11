@@ -45,6 +45,7 @@ namespace adap_parameters_estimator {
 		adap_parameters_estimator::Parameters parameters;
 
 		int interaction;
+		virtual double get_deltaV();
 
     public:
         /** TaskContext constructor for Task
@@ -121,6 +122,7 @@ namespace adap_parameters_estimator {
          * before calling start() again.
          */
         void cleanupHook();
+
     };
 }
 
