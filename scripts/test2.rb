@@ -15,7 +15,7 @@
 
 
 require 'orocos'
-require './adap_properties.rb'
+require './adap_properties2.rb'
 require './model_properties.rb'
 
 include Orocos
@@ -40,7 +40,7 @@ Orocos.run 'adap_parameters_estimator::Task' => 'adap_parameters',
 	
 	# initialising the adaptive method properties (from adap_properties.rb)	
         configure_adap = adapP
-        adap_properties(configure_adap)
+        adap_properties2(configure_adap)
         adapP = configure_adap
         
         configure_model = model
@@ -90,9 +90,9 @@ Orocos.run 'adap_parameters_estimator::Task' => 'adap_parameters',
 		
 	# Connecting the ports
 	model.velocity.connect_to adapP.speed_samples
-	
-	
-
+	        
+		
+        puts "test"
 		
 	# Configuring and starting the component
   adapP.configure
@@ -100,8 +100,10 @@ Orocos.run 'adap_parameters_estimator::Task' => 'adap_parameters',
   adapP.start
   model.start
   
+   puts "test1"
 	# Writing the sample variables on the input ports
 	thrusterSampleWriter_adap.write(thrusterSample)
+	 puts "test2"
 	thrusterSampleWriter_model.write(thrusterSample)
 	
 	
@@ -109,7 +111,7 @@ Orocos.run 'adap_parameters_estimator::Task' => 'adap_parameters',
 	##########################################################################
 	#		                    COMPONENT OUTPUT PORT
 	##########################################################################
-        
+       
                
 	parametersReader = adapP.parameters.reader
 	#velocity = model.velocity.reader
@@ -130,6 +132,7 @@ Orocos.run 'adap_parameters_estimator::Task' => 'adap_parameters',
 	                
 	                	                               	                
 	        end	
+		
 		
 	
 	        thrusterInput.elements[0].effort = 2*(50*Math.sin(k*adapP.ftau) + 50)
