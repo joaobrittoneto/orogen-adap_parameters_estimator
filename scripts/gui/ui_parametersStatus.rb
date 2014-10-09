@@ -259,7 +259,7 @@ class Supervisory
   def normDeltaV_evolution(port)
     @port = port
     @port.connect_to do |sample, _|                    
-        @window.deltaV_normalized.update(sample, "mean(|Vestimated-Vmesured|)/mean(|Vmesured|)")
+        @window.deltaV_normalized.update(sample, "mean(|Ve-Vm|) / mean(|Vm|)")
         ########################################################
         # Set y-axis scale by the average value of the absolute 
         # value of the error in the period
