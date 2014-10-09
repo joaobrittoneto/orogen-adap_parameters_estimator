@@ -23,6 +23,7 @@ def plot_inertia(samples, sampleTime, name)
 
 	plot.set_x_axis_scale(time.min, time.max)
         plot.set_y_axis_scale(samples.min/1.5,samples.min*1.5)
+        #plot.set_y_axis_scale(samples.min,samples.max)
         plot.setXTitle("Time")
 
 

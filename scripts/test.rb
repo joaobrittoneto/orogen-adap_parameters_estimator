@@ -33,6 +33,7 @@ Orocos.run 'adap_parameters_estimator::Task' => 'adap_parameters' do
 	jointStates = Types::Base::JointState.new
 	gainA = Eigen::VectorX.new(6)
 	gainLambda = Eigen::MatrixX.new(6,4)
+	matrixTrhuster = Eigen::MatrixX.new(6,5)
 		
   ##########################################################################
   #                             CONFIG DATA
@@ -43,13 +44,15 @@ Orocos.run 'adap_parameters_estimator::Task' => 'adap_parameters' do
 	frequencyTau = 1
 	gainLambdaMatrix = [ 0.0005, 0.5, 0.5, 0.0005, 0.0001, 1, 1, 0, 1, 1, 1,1, 1, 1, 1, 1, 1, 1, 1, 1, 0.02, 0.5, 0.5, 0.0005]
 	gainAVector = [-0.1, -0.0001, -1, -1, -1, -0.001]
-	dof = :SURGE;
+	mTrhuster = [1,1,0,0,0,  0,0,1,0,0, 0,0,0,1,1, 0,0,0,0,0,	0,0,0,0,0, -0.21,0.21,-0.3,0,0]
+	dof = :YAW;
 
         #puts gainLambda
         #puts gainLambdaMatrix
         
         gainLambda.from_a(gainLambdaMatrix, 6, gainLambdaMatrix.size/6, false)
         gainA.from_a(gainAVector)
+        matrixTrhuster.from_a(mTrhuster, 6,5,false)
                 
         
 	##########################################################################
@@ -88,8 +91,9 @@ Orocos.run 'adap_parameters_estimator::Task' => 'adap_parameters' do
         
 	adapP.gLambda = gainLambda
 	adapP.gA = gainA
+	adapP.thrusterMatrix = matrixTrhuster
 
-       
+       puts adapP.thrusterMatrix 
 
 	##########################################################################
 	#		                    COMPONENT INPUT PORTS
@@ -115,11 +119,14 @@ Orocos.run 'adap_parameters_estimator::Task' => 'adap_parameters' do
         #printf "\n\n"
         #puts thrusterSample.elements[0].effort
 
-		
+	puts "trhuster"
+	puts thrusterSample.elements.size
+	
+        
 	# Configuring and starting the component
   adapP.configure
   adapP.start
-  
+ 
 	# Writing the sample variables on the input ports
 	thrusterSampleWriter.write(thrusterSample)
 	speedSampleWriter.write(speedSample)
@@ -138,7 +145,7 @@ Orocos.run 'adap_parameters_estimator::Task' => 'adap_parameters' do
 	
 	
         k = 0
-        
+        n = 5
 	
 	until k > 600 do
 #=begin
@@ -151,12 +158,12 @@ Orocos.run 'adap_parameters_estimator::Task' => 'adap_parameters' do
 		#end
 		
 		
-	speedInput.velocity[0] = 0.519*Math.sin(k*frequencyTau - 1) + 1.53
-	speedInput.velocity[1] = 0.2505*Math.sin(k*frequencyTau - 1) + 0.785
+	#speedInput.velocity[0] = 0.519*Math.sin(k*frequencyTau - 1) + 1.53
+	#speedInput.velocity[1] = 0.2505*Math.sin(k*frequencyTau - 1) + 0.785
 	speedInput.angular_velocity[2] = 0.74*Math.sin(k*frequencyTau - 0.45) + 1.34
 	
-	thrusterInput.elements[0].effort = 2*(50*Math.sin(k*frequencyTau) + 50)
-	thrusterInput.elements[1].effort = 50*Math.sin(k*frequencyTau) + 50
+	#thrusterInput.elements[0].effort = 2*(50*Math.sin(k*frequencyTau) + 50)
+	#thrusterInput.elements[1].effort = 50*Math.sin(k*frequencyTau) + 50
 	thrusterInput.elements[5].effort = 15*Math.sin(k*frequencyTau) + 15
 		
 	# Loading the values into the sample variables
@@ -171,6 +178,18 @@ Orocos.run 'adap_parameters_estimator::Task' => 'adap_parameters' do
 	# Writing the sample variables on the input ports
 	thrusterSampleWriter.write(thrusterSample)
 	speedSampleWriter.write(speedSample)
+	
+	
+	 if parametersSample = parametersReader.read_new
+                        puts "\n\nparameters: \n"
+	                puts "\n", parametersSample.inertiaCoeff[n].positive
+	                puts "\n", parametersSample.quadraticDampingCoeff[n].positive
+	                puts "\n", parametersSample.linearDampingCoeff[n].positive
+	                puts "\n", parametersSample.gravityAndBuoyancy[n]
+	      
+	            
+	  end       
+	
 	
 	
 	k = k + sampTime	

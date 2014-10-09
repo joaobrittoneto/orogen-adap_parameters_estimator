@@ -62,15 +62,13 @@ Orocos.run 'adap_parameters_estimator::Task' => 'adap_parameters',
 	#	     SETTING INITIAL POSITION, VELOCITY AND LINEAR CONTROL VALUES
 	##########################################################################
 
-
-	for i in 0..5
+        #numberThruster = adapP.thrusterMatrix.size/6
+	for i in 0..5 #(numberThruster-1)
 		thrusterInput.elements << jointStates	# Creates a new jointState element
 		thrusterInput.elements[i].effort = 0	# Gets the array value for the new jointState.effort element
 	end
 
-                
-
-	
+        	
        
 
 	##########################################################################
@@ -109,7 +107,7 @@ Orocos.run 'adap_parameters_estimator::Task' => 'adap_parameters',
 	thrusterSampleWriter_adap.write(thrusterSample_adap)
 	thrusterSampleWriter_model.write(thrusterSample_model)
 	
-	
+		
 
 	##########################################################################
 	#		                    COMPONENT OUTPUT PORT
@@ -119,6 +117,7 @@ Orocos.run 'adap_parameters_estimator::Task' => 'adap_parameters',
         deltavReader = adapP.deltaV.reader 
         velocityReader = model.velocity.reader
         
+               
         velocitySamplesArray = Array.new {Array.new(6)}      
         auxiliarArray = Array.new(4)
         parametersArray = Array.new
@@ -126,21 +125,22 @@ Orocos.run 'adap_parameters_estimator::Task' => 'adap_parameters',
 	tauArray = Array.new
 		
 	k = 0
-        n = 5
+        n = 0
 	
 	until k > 120 do
 #=begin
                 
-               #  thrusterInput.elements[n].effort = 2*(50*Math.sin(k*adapP.ftau) + 50)
-	       # thrusterInput.elements[1].effort = 50*Math.sin(k*adapP.ftau) + 50
+                thrusterInput.elements[0].effort = 2*(50*Math.sin(k*adapP.ftau) + 50)
+	       # thrusterInput.elements[1].effort = -(50*Math.sin(k*adapP.ftau) + 50)
 	       # thrusterInput.elements[2].effort = 50*Math.sin(k*adapP.ftau) + 50
-	        thrusterInput.elements[5].effort = 15*Math.sin(k*adapP.ftau) + 15
+	       # thrusterInput.elements[5].effort = 15*Math.sin(k*adapP.ftau) + 15
 	        
 	
 	        # Loading the values into the sample variables
 	        thrusterSample = thrusterInput
+	        #tauArray << (adapP.thrusterMatrix * thrusterInput.elements.effort)[n]
 	        tauArray << thrusterInput.elements[n].effort
-	
+	        
 		# Writing the sample variables on the input ports
 	        thrusterSampleWriter_model.write(thrusterSample)
 	        thrusterSampleWriter_adap.write(thrusterSample)
@@ -164,24 +164,14 @@ Orocos.run 'adap_parameters_estimator::Task' => 'adap_parameters',
 	             4.times {auxiliarArray.shift}
 	             
 	             parametersArray    <<      auxiliarArray
-	             
-	             #deltaVSamplesArray << adapP.get_deltaV   
-	             
-	             #puts "\n\nparameters: \n"
-	             #puts auxiliarArray
-	             
-	             #puts "\n\ndelta_v\n"
-	             #puts adapP.get_deltaV
+	                      
 	                	                               	                
 	        end	
 		        
                  
 	        
 	         if newVelocitySample = velocityReader.read_new
-                         velocitySamplesArray << newVelocitySample.velocity.to_a + newVelocitySample.angular_velocity.to_a
-                         #deltaVSamplesArray << adapP.get_deltaV
-                         #puts "\n\nvelocity\n"
-                         #puts velocitySamplesArray.last
+                         velocitySamplesArray << newVelocitySample.velocity.to_a + newVelocitySample.angular_velocity.to_a             
                  end
                  
                  if newdeltaVSample = deltavReader.read_new
@@ -201,8 +191,8 @@ Orocos.run 'adap_parameters_estimator::Task' => 'adap_parameters',
        puts "\n\nparametersArray\n"
        puts parametersArray.size
        
-       puts "\n\ntauArray\n"
-       puts tauArray.size
+       #puts "\n\ntauArray\n"
+       #puts tauArray.size
        
        puts "\n\nvelocitySamplesArray\n"
        puts velocitySamplesArray.size
@@ -213,10 +203,13 @@ Orocos.run 'adap_parameters_estimator::Task' => 'adap_parameters',
        puts "\n\nK\n"
        puts k/adapP.sTime       
        
-       parametersArray.shift(2)
+       parametersArray.shift(10)
        
        plotSamples = parameterarray(parametersArray,:INERTIA) # [:INERTIA, :QUADRATIC, :LINEAR, :BUOYANCY]
        plot_inertia(plotSamples, adapP.sTime, "INERTIA")
+       
+       puts "\n\nMin inercia\n"
+       puts plotSamples.min 
        
        plotSamples = parameterarray(parametersArray,:QUADRATIC)
        plot(plotSamples, adapP.sTime, "QUADRATIC DAMPING")
@@ -227,7 +220,7 @@ Orocos.run 'adap_parameters_estimator::Task' => 'adap_parameters',
        plotSamples = parameterarray(parametersArray,:BUOYANCY) 
        plot(plotSamples, adapP.sTime, "BUOYANCY") 
        
-       plotSamples = dofarray(velocitySamplesArray,:YAW) #[:SURGE, :SWAY, :HEAVE, :ROLL, :PITCH, :YAW]
+       plotSamples = dofarray(velocitySamplesArray,:SURGE) #[:SURGE, :SWAY, :HEAVE, :ROLL, :PITCH, :YAW]
        plot(plotSamples, adapP.sTime, "Velocity") 
        
        plot(deltaVSamplesArray, adapP.sTime, "delta velocity" )   

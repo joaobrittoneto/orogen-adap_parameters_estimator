@@ -22,11 +22,12 @@ task_context "Task" do
    #
    #############################################################       
    	
-	property "gA", "base::VectorXd"
-	property "gLambda", "base::MatrixXd"
-	property "dofs", "adap_parameters_estimator::DOFS"
-	property "sTime", "double", 0.01
-	property "ftau", "double"
+	property "gA", "base::VectorXd"										#gain of model, must have negative values.
+	property "gLambda", "base::MatrixXd"								#gain of parameters, must have positive values.
+	property "thrusterMatrix", "base::MatrixXd"							#matrix of trhuster. identifie the forces and torques aplied for each of n trhuster
+	property "dofs", "adap_parameters_estimator::DOFS", :SURGE			#degree of freedom. If UNINITIALISED the method should identify
+	property "sTime", "double", 0.01 									#sample time
+	property "ftau", "double", 0 										#frequencie of input thruster. Important for filter the parameters
 
    #############################################################
    #
@@ -34,8 +35,8 @@ task_context "Task" do
    #
    #############################################################       
    	
-	operation("get_deltaV").
-      returns("double")
+	#operation("get_deltaV").
+    #  returns("double")
     	
 	
    #############################################################
@@ -63,6 +64,9 @@ task_context "Task" do
     	
 	output_port "deltaV", "double"
     	doc "error of the real velocity and the estimated velocity of the adap_method"
+    	
+    output_port "normDeltaV", "double"
+    	doc "normalized error of the real velocity and the estimated velocity of the adap_method"
 
     
     port_driven "speed_samples"
