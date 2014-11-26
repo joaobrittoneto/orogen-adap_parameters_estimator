@@ -28,23 +28,11 @@ namespace adap_parameters_estimator {
     {
 	friend class TaskBase;
     protected:
-		// variables used from property.
-		Eigen::Matrix<double, 6, 4, Eigen::DontAlign> gainLambda;
-		Eigen::Matrix<double, 6, 1, Eigen::DontAlign> gainA;
-		Eigen::MatrixXd thrusterMatrix;
-		double sampTime;
-		double frequencyTau;
-		DOFS dof;
 
-		// adaptive method variables
+		// adaptive method
 		adap_parameters_estimator::AdapParameters *adapParam;
 
-		//variables for reading and writing
-		base::samples::Joints thruster_samples;
-		base::samples::RigidBodyState uwvstate;
 
-		adap_parameters_estimator::Parameters parameters;
-		Parameters modelParameters;
 
     public:
         /** TaskContext constructor for Task

@@ -31,35 +31,19 @@ bool Task::configureHook()
         return false;
     else
     {
-    	gainLambda = _gLambda.get();
-    	gainA = _gA.get();
-    	thrusterMatrix = _thrusterMatrix.get();
-    	dof = _dofs.get();
-    	sampTime = _sTime.get();
-    	frequencyTau = _ftau.get();
-
+    	Eigen::Matrix<double, 6, 4, Eigen::DontAlign> gainLambda = _gLambda.get();
+    	Eigen::Matrix<double, 6, 1, Eigen::DontAlign> gainA		 = _gA.get();
+    	Eigen::MatrixXd thrusterMatrix							 = _thrusterMatrix.get();
+    	double sampTime											 = _sTime.get();
+    	double frequencyTau										 = _ftau.get();
+    	DOFS dof												 = _dofs.get();
 
     	adapParam = new AdapParameters(gainLambda, gainA, thrusterMatrix, dof, sampTime, frequencyTau);
-
 
     	if (!adapParam->gainsOk)
     	{
     		std::cout << std::endl << " Gains are not OK. Verify gains values. "<< std::endl;
        	}
-
-    	 for (int i=0; i<6; i++)
-    	    	{
-    	    	 modelParameters.inertiaCoeff[i].positive = 1;
-    	    	 modelParameters.inertiaCoeff[i].negative = 1;
-    	    	 modelParameters.quadraticDampingCoeff[i].positive = 0;
-    	    	 modelParameters.quadraticDampingCoeff[i].negative = 0;
-    	    	 modelParameters.linearDampingCoeff[i].positive = 0;
-    	    	 modelParameters.linearDampingCoeff[i].negative = 0;
-    	    	}
-    	 modelParameters.gravityAndBuoyancy = base::VectorXd::Zero(6);
-    	 modelParameters.coriolisCentripetalMatrix = base::MatrixXd::Zero(6,6);
-
-
 
     	return true;
     }
@@ -74,46 +58,51 @@ void Task::updateHook()
 {
     TaskBase::updateHook();
 
-    Eigen::Matrix<double, 6, 4, Eigen::DontAlign> gainLambda_temp = gainLambda;
-    Eigen::Matrix<double, 6, 1, Eigen::DontAlign> gainA_temp = gainA;
-    double frequencyTau_temp = frequencyTau;
-    DOFS dof_temp = dof;
+    static bool first_time = true;
+    static Parameters modelParameters;
+
+    if(first_time)
+    {
+    	for (int i=0; i<6; i++)
+    	    	    	{
+    	    	    	 modelParameters.inertiaCoeff[i].positive = 1;
+    	    	    	 modelParameters.inertiaCoeff[i].negative = 1;
+    	    	    	 modelParameters.quadraticDampingCoeff[i].positive = 0;
+    	    	    	 modelParameters.quadraticDampingCoeff[i].negative = 0;
+    	    	    	 modelParameters.linearDampingCoeff[i].positive = 0;
+    	    	    	 modelParameters.linearDampingCoeff[i].negative = 0;
+    	    	    	}
+    	modelParameters.gravityAndBuoyancy = base::VectorXd::Zero(6);
+    	modelParameters.coriolisCentripetalMatrix = base::MatrixXd::Zero(6,6);
+    	first_time = false;
+    }
+
+    Eigen::Matrix<double, 6, 4, Eigen::DontAlign> gainLambda = _gLambda.get();
+    Eigen::Matrix<double, 6, 1, Eigen::DontAlign> gainA		 = _gA.get();
+    Eigen::MatrixXd thrusterMatrix							 = _thrusterMatrix.get();
+    double sampTime											 = _sTime.get();
+    double frequencyTau										 = _ftau.get();
+    DOFS dof												 = _dofs.get();
+
+   	adapParam->configure(gainLambda, gainA, thrusterMatrix, dof, sampTime, frequencyTau);
 
 
-    gainLambda = _gLambda.get();
-   	gainA = _gA.get();
-   	thrusterMatrix = _thrusterMatrix.get();
-   	dof = _dofs.get();
-   	sampTime = _sTime.get();
-   	frequencyTau = _ftau.get();
-
-   	if (gainLambda_temp != gainLambda || gainA_temp != gainA || frequencyTau_temp != frequencyTau || dof_temp != dof )
-   	{
-   		std::cout << std::endl << "update configure: "<< std::endl;
-   		adapParam->configure(gainLambda, gainA, thrusterMatrix, dof, sampTime, frequencyTau);
-   		std::cout << "update configure2: "<< std::endl << std::endl;
-   	}
-
-
-
-   	if (!adapParam->gainsOk)
-   	{
-   		std::cout << std::endl << " Gains are not OK. Verify gains values. "<< std::endl;
-   	}
-
-
+   	//Inputs
     base::samples::RigidBodyState inputSpeed;
     base::samples::Joints inputThruster;
 
+    //Convert inputs into vectors
     base::Vector6d velocity;
     base::VectorXd thruster;
     //thruster.resize(thrusterMatrix.size()/6); //In case the input is the forces applied for each thruster
     thruster.resize(6); // In case the input is the forces and torques applied direct to the auv
 
+    //Outputs
     double deltaV;
     double normDeltaV;
+    base::Vector4d parameters;
 
-    if (!adapParam->definedDof)
+    if (dof == UNINITIALISED)
     	{
     		adapParam->establish_dof(thruster, velocity);
     	}
@@ -129,7 +118,6 @@ void Task::updateHook()
 			else
 				velocity[i] = inputSpeed.angular_velocity[i-3];
 		}
-		//std::cout << std::endl << "velocity: "<< velocity << std::endl << std::endl;
 	}
 
 
@@ -141,63 +129,17 @@ void Task::updateHook()
 				thruster[i] = inputThruster.elements[i].effort;
 	}
 
-	adapParam->parameters_estimation(thruster, velocity);
+	adapParam->parameters_estimation(thruster, velocity, parameters, deltaV, normDeltaV);
 
 
 
-/*	if (_thruster_samples.readNewest(inputThruster) == RTT::NewData)
-		{
-			int numberOfThruster = inputThruster.elements.size();
-			std::cout << std::endl << "tnumberOfThruster: "<< numberOfThruster << std::endl << std::endl;
-			// Converting from base::samples::Joints to base::Vector6d
-			for (int i = 0; i < numberOfThruster; i++)
-				thruster[i] = inputThruster.elements[i].effort;
-
-		}
-*/
+	modelParameters.inertiaCoeff[dof].positive           = parameters[0];
+	modelParameters.quadraticDampingCoeff[dof].positive  = parameters[1];
+	modelParameters.linearDampingCoeff[dof].positive     = parameters[2];
+	modelParameters.gravityAndBuoyancy[dof]              = parameters[3];
 
 
-	/*adapParam->delta_velocity(velocity);
-	adapParam->estimated_state(tau);
-	adapParam->euler_velocity();
-	adapParam->euler_parameters();
-	adapParam->convetional_parameters();
-	*/
-//	adapParam->parameters_estimation(thruster, velocity);
-//	adapParam->filter_parameters(interaction);
-
-//	interaction++;
-	//deltaV =  adapParam->get_delta_v();
-
-	//std::cout << std::endl << "===================="<< std::endl;
-	//std::cout << std::endl << "DELTA_v: "<< adapParam->get_delta_v() << std::endl << std::endl;
-	//std::cout << std::endl << "estPhi: " << adapParam->get_est_phi() << std::endl << std::endl;
-	//std::cout << std::endl << "adapParam fTau: "<< adapParam->get_fTau() << std::endl << std::endl;
-	//std::cout << std::endl << "Estimated States: "<< std::endl << adapParam->get_est_states() << std::endl << std::endl;
-	//std::cout << std::endl << "estVelocity: "<< std::endl << adapParam->get_est_velocity() << std::endl << std::endl;
-	//std::cout << std::endl << "Filtered Parameters: "<< std::endl << adapParam->get_filtered_parameters() << std::endl << std::endl;
-	//std::cout << std::endl << "Parameters: "<< std::endl << adapParam->get_parameters() << std::endl << std::endl;
-
-	//std::cout << std::endl << "REAL velocity: "<< velocity[dof] << std::endl << std::endl;
-
-	modelParameters.inertiaCoeff[dof].positive           = adapParam->get_filtered_parameters()[0];
-	modelParameters.quadraticDampingCoeff[dof].positive  = adapParam->get_filtered_parameters()[1];
-	modelParameters.linearDampingCoeff[dof].positive     = adapParam->get_filtered_parameters()[2];
-	modelParameters.gravityAndBuoyancy[dof]              = adapParam->get_filtered_parameters()[3];
-/*
-	modelParameters.inertiaCoeff[dof].positive           = adapParam->get_parameters()[0];
-	modelParameters.quadraticDampingCoeff[dof].positive  = adapParam->get_parameters()[1];
-	modelParameters.linearDampingCoeff[dof].positive     = adapParam->get_parameters()[2];
-	modelParameters.gravityAndBuoyancy[dof]              = adapParam->get_parameters()[3];
-*/
-	//std::cout << std::endl << "teste2 TASK.CPP: "<< std::endl << modelParameters.gravityAndBuoyancy[dof] << std::endl << std::endl;
-
-	//std::cout << std::endl << "inertia: "<< modelParameters.inertiaCoeff[dof].positive << std::endl << std::endl;
 	_parameters.write(modelParameters);
-
-	deltaV = adapParam->get_delta_v();
-	normDeltaV = adapParam->get_norm_delta_v();
-
 	_deltaV.write(deltaV);
 	_normDeltaV.write(normDeltaV);
 

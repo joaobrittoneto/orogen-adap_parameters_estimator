@@ -132,7 +132,6 @@ class Supervisory
         @dofs = :UNINITIALISED
         @dof = 6
       end
-      puts @dofs
    end
    
    
@@ -367,7 +366,6 @@ class Supervisory
   end   
     
   def evolution (dV, ndV, vel, ft, para)
-        puts @dof
         deltaV_evolution (dV)
         normDeltaV_evolution(ndV)
         velocity_evolution (vel)

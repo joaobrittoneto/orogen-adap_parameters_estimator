@@ -44,11 +44,10 @@ Orocos.run 'adap_parameters_estimator::Task' => 'adap_parameters',
         model = TaskContext.get 'motion_model'
         forcesTorques = TaskContext.get 'forces_torques'
 	
-	puts "teste"
-	
-	
+		
 	thrusterInput = Types::Base::Samples::Joints.new 
 	jointStates = Types::Base::JointState.new
+	
 	
 	# initialising the adaptive method properties (from adap_properties.rb)	
         configure_adap = adapP
@@ -63,64 +62,31 @@ Orocos.run 'adap_parameters_estimator::Task' => 'adap_parameters',
         force_properties(forces)
         forcesTorques = forces
 	
-       puts "teste1"
-        
-	##########################################################################
-	#	     SETTING INITIAL POSITION, VELOCITY AND LINEAR CONTROL VALUES
-	##########################################################################
-
-       # numberThruster = adapP.thrusterMatrix.size/6
-	#for i in 0..(numberThruster-1)
-	#	thrusterInput.elements << jointStates	# Creates a new jointState element
-	#	thrusterInput.elements[i].effort = 0	# Gets the array value for the new jointState.effort element
-	#end
-
-        	
-       
-
+     
+      
 	##########################################################################
 	#		                    COMPONENT INPUT PORTS
 	##########################################################################
 
-  
-	## Writers
-	#thrusterSampleWriter_adap = adapP.thruster_samples.writer
-	#thrusterSampleWriter_model = model.thruster_samples.writer
-	
-	
-
-	# Samples
-	#thrusterSample_adap = thrusterSampleWriter_adap.new_sample
-	#thrusterSample_model = thrusterSampleWriter_model.new_sample
-	
-
-	# Loading the values into the sample variables
-	#thrusterSample_adap = thrusterInput
-	#thrusterSample_model = thrusterInput
-	
+  		
 	# Connecting the ports
 	forcesTorques.forces.connect_to model.thruster_samples
 	forcesTorques.forces.connect_to adapP.thruster_samples
 	model.velocity.connect_to adapP.speed_samples
 	
 	
-        puts "teste2"
+      
 		
 	# Configuring and starting the component
-  forcesTorques.configure
-  adapP.configure
-  model.configure
-
-puts "teste3"
+        forcesTorques.configure
+        adapP.configure
+        model.configure
 
 
-  #forcesTorques.start
-  #adapP.start
-  model.start
+
+
+        model.start
   
-	# Writing the sample variables on the input ports
-	#thrusterSampleWriter_adap.write(thrusterSample_adap)
-	#thrusterSampleWriter_model.write(thrusterSample_model)
 	
 		
 
@@ -128,24 +94,7 @@ puts "teste3"
 	#		                    COMPONENT OUTPUT PORT
 	##########################################################################
         
-        #parametersReader = adapP.parameters.reader 
-        #deltavReader = adapP.deltaV.reader 
-        #velocityReader = model.velocity.reader
         
-               
-        #velocitySamplesArray = Array.new {Array.new(6)}      
-        #auxiliarArray = Array.new(4)
-        #parametersArray = Array.new
-        #deltaVSamplesArray = Array.new
-	#tauArray = Array.new
-		
-	#k = 0
-        #n = 1
-	
-	@dof = adapP.dofs
-	puts @dof
-	puts adapP.dofs
-	
 	
 	## Defining the proxy for each task 
 	parametersproxy = Orocos::Async.proxy("adap_parameters")
@@ -159,23 +108,13 @@ puts "teste3"
 	velocityport     = velocityproxy.port("velocity")
 	forcesport       = thrusterproxy.port("forces")
 	
-	puts "test"
-	
-	
-       # adapP.parameters.connect_to do |sample, _|
-       #        widget.update sample.inertiaCoeff[0].positive, "Ix"
-        #	puts sample.inertiaCoeff[0].positive
-    	#end
-	
-	
+		
 	supervisory = Supervisory.new(adapP, model, forcesTorques)
 	supervisory.evolution(deltaVport, nomrDeltaVport, velocityport, forcesport, parametersport)
-	puts "test1"
+	
 	
         supervisory.show
-	# widget.show 
 	
-	puts "test2"
         Vizkit.exec 
 	
 	       

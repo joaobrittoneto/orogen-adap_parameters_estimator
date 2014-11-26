@@ -14,7 +14,7 @@ def adap_properties(task)
 	sampTime = 0.01
 	frequencyTau = 1
 	
-	dof = :YAW; #[:SURGE, :SWAY, :HEAVE, :ROLL, :PITCH, :YAW] default in orogen :UNINITIALISED 
+	dof = :SURGE; #[:SURGE, :SWAY, :HEAVE, :ROLL, :PITCH, :YAW] default in orogen :UNINITIALISED 
 	
 	gainLambdaMatrix = [0.0005,0.5,0.5,0.0005,  0.0001,1,1,0,  0.0001,1,1,0,  1,1,1,1,  1,1,1,1,  0.02,0.5,0.5,0.0005] #0.02,0.5,0.5,0.0005
 	
