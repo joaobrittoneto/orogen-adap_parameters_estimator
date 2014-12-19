@@ -6,7 +6,7 @@
   <license></license>
   <url></url>
   <logo></logo>
-   <depend package="base/cmake" />
+  <depend package="base/cmake" />
   <depend package="adap_model/adap_parameters_estimator"/>
   <!--
    To add any dependencies use the depend tag

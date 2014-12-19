@@ -88,8 +88,9 @@ void Task::updateHook()
 
 
    	//Inputs
-    base::samples::RigidBodyState inputSpeed;
-    base::samples::Joints inputThruster;
+ //   base::samples::RigidBodyState inputSpeed;
+ //   base::samples::Joints inputThruster;
+    adap_samples_input::DynamicAUV dynamic;
 
     //Convert inputs into vectors
     base::Vector6d velocity;
@@ -108,7 +109,7 @@ void Task::updateHook()
     	}
 
 
-	if (_speed_samples.readNewest(inputSpeed) == RTT::NewData)
+/*	if (_speed_samples.readNewest(inputSpeed) == RTT::NewData)
 	{
 		// Converting from base::samples::RigidBodyStates to base::Vector6d
 		for (int i = 0; i < 6; i++)
@@ -128,6 +129,26 @@ void Task::updateHook()
 		for (int i = 0; i < numberOfThruster; i++)
 				thruster[i] = inputThruster.elements[i].effort;
 	}
+*/
+	if(_dynamic_samples.read(dynamic) == RTT::NewData)
+	{
+		// Converting from base::samples::RigidBodyStates to base::Vector6d
+		for (int i = 0; i < 6; i++)
+		{
+			if (i < 3)
+				velocity[i] = dynamic.rbs.velocity[i];
+			else
+				velocity[i] = dynamic.rbs.angular_velocity[i-3];
+		}
+
+		int numberOfThruster = dynamic.joints.elements.size();
+		// Converting from base::samples::Joints to base::Vector6d
+		for (int i = 0; i < numberOfThruster; i++)
+			thruster[i] = dynamic.joints.elements[i].effort;
+
+	}
+
+
 
 	adapParam->parameters_estimation(thruster, velocity, parameters, deltaV, normDeltaV);
 

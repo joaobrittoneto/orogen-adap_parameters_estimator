@@ -3,10 +3,12 @@ name "adap_parameters_estimator"
 
 
  using_library "adap_parameters_estimator"
+ using_library "adap_samples_input"
  using_library "motion_model"
  
  import_types_from "adap_parameters_estimator/adap_parameters.hpp"
  import_types_from "adap_parameters_estimator/adap_dataTypes.h"
+ import_types_from "adap_samples_input/samples_dataType.h"
  import_types_from "motion_model/MotionModel.hpp"
 
  import_types_from "base"
@@ -51,6 +53,9 @@ task_context "Task" do
 	
     input_port "speed_samples", "base/samples/RigidBodyState"
 		doc "Measured intput containing position, velocity, orientation"
+		
+	input_port "dynamic_samples", "adap_samples_input::DynamicAUV"
+		doc "Measured input containing acceleration, velocity and force"	
 
    #############################################################
    #
@@ -69,6 +74,6 @@ task_context "Task" do
     	doc "normalized error of the real velocity and the estimated velocity of the adap_method"
 
     
-    port_driven "speed_samples"
+    port_driven "dynamic_samples"
 end
 

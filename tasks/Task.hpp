@@ -7,6 +7,7 @@
 #include "adap_parameters_estimator/adap_parameters.hpp"
 #include "base/commands/Joints.hpp"
 #include "base/samples/RigidBodyState.hpp"
+#include "adap_samples_input/samples_dataType.h"
 
 namespace adap_parameters_estimator {
 
