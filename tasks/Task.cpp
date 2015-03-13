@@ -37,6 +37,8 @@ bool Task::configureHook()
     	double sampTime											 = _sTime.get();
     	double frequencyTau										 = _ftau.get();
     	DOFS dof												 = _dofs.get();
+    	aligned_data											 = _aligned_data.get();
+		body_forces 											 =_body_forces.get();
 
     	adapParam = new AdapParameters(gainLambda, gainA, thrusterMatrix, dof, sampTime, frequencyTau);
 
@@ -88,15 +90,16 @@ void Task::updateHook()
 
 
    	//Inputs
- //   base::samples::RigidBodyState inputSpeed;
- //   base::samples::Joints inputThruster;
+    base::samples::RigidBodyState inputSpeed;
+    base::samples::Joints inputThruster;
     adap_samples_input::DynamicAUV dynamic;
 
     //Convert inputs into vectors
     base::Vector6d velocity;
+    base::Vector6d forces;
     base::VectorXd thruster;
-    //thruster.resize(thrusterMatrix.size()/6); //In case the input is the forces applied for each thruster
-    thruster.resize(6); // In case the input is the forces and torques applied direct to the auv
+
+
 
     //Outputs
     double deltaV;
@@ -105,53 +108,78 @@ void Task::updateHook()
 
     if (dof == UNINITIALISED)
     	{
-    		adapParam->establish_dof(thruster, velocity);
+    		adapParam->establish_dof(thruster, velocity); //TODO verify method
     	}
 
-
-/*	if (_speed_samples.readNewest(inputSpeed) == RTT::NewData)
-	{
-		// Converting from base::samples::RigidBodyStates to base::Vector6d
-		for (int i = 0; i < 6; i++)
+    if(!aligned_data)
+    {
+		if (_speed_samples.readNewest(inputSpeed) == RTT::NewData)
 		{
-			if (i < 3)
-				velocity[i] = inputSpeed.velocity[i];
-			else
-				velocity[i] = inputSpeed.angular_velocity[i-3];
-		}
-	}
-
-
-	if(_thruster_samples.readNewest(inputThruster) == RTT::NewData)
-	{
-		int numberOfThruster = inputThruster.elements.size();
-		// Converting from base::samples::Joints to base::Vector6d
-		for (int i = 0; i < numberOfThruster; i++)
-				thruster[i] = inputThruster.elements[i].effort;
-	}
-*/
-	if(_dynamic_samples.read(dynamic) == RTT::NewData)
-	{
-		// Converting from base::samples::RigidBodyStates to base::Vector6d
-		for (int i = 0; i < 6; i++)
-		{
-			if (i < 3)
-				velocity[i] = dynamic.rbs.velocity[i];
-			else
-				velocity[i] = dynamic.rbs.angular_velocity[i-3];
+			// Converting from base::samples::RigidBodyStates to base::Vector6d
+			for (int i = 0; i < 6; i++)
+			{
+				if (i < 3)
+					velocity[i] = inputSpeed.velocity[i];
+				else
+					velocity[i] = inputSpeed.angular_velocity[i-3];
+			}
 		}
 
-		int numberOfThruster = dynamic.joints.elements.size();
-		// Converting from base::samples::Joints to base::Vector6d
-		for (int i = 0; i < numberOfThruster; i++)
-			thruster[i] = dynamic.joints.elements[i].effort;
+		if(_thruster_samples.readNewest(inputThruster) == RTT::NewData)
+		{
+			if(body_forces)
+			{
+				// Converting from base::samples::Joints to base::Vector6d
+				if(inputThruster.elements.size()!=6)
+				{
+					std::cout<<std::endl<< "Make sure the input forces have the right dimention" <<std::endl;
+				}
+				for (int i = 0; i < inputThruster.elements.size(); i++)
+					forces[i] = inputThruster.elements[i].effort;
+			}
+			else if(!body_forces)
+			{
+				for (int i = 0; i < inputThruster.elements.size(); i++)
+					{thruster[i] = inputThruster.elements[i].effort;}
+					adapParam->forces_torques(thruster,forces);
+			}
+		}
+    }
 
-	}
+    else if(aligned_data)
+    {
+		if(_dynamic_samples.read(dynamic) == RTT::NewData)
+		{
+			// Converting from base::samples::RigidBodyStates to base::Vector6d
+			for (int i = 0; i < 6; i++)
+			{
+				if (i < 3)
+					velocity[i] = dynamic.rbs.velocity[i];
+				else
+					velocity[i] = dynamic.rbs.angular_velocity[i-3];
+			}
+
+			if(body_forces)
+			{
+				// Converting from base::samples::Joints to base::Vector6d
+				if(dynamic.joints.elements.size()!=6)
+				{
+					std::cout<<std::endl<< "Make sure the input forces have the right dimention" <<std::endl;
+				}
+				for (int i = 0; i < dynamic.joints.elements.size(); i++)
+					forces[i] = dynamic.joints.elements[i].effort;
+			}
+			else if(!body_forces)
+			{
+				for (int i = 0; i < dynamic.joints.elements.size(); i++)
+					{thruster[i] = dynamic.joints.elements[i].effort;}
+					adapParam->forces_torques(thruster,forces);
+			}
+		}
+    }
 
 
-
-	adapParam->parameters_estimation(thruster, velocity, parameters, deltaV, normDeltaV);
-
+	adapParam->parameters_estimation(forces, velocity, parameters, deltaV, normDeltaV);
 
 
 	modelParameters.inertiaCoeff[dof].positive           = parameters[0];

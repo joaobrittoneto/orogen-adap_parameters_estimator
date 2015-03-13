@@ -4,12 +4,12 @@ name "adap_parameters_estimator"
 
  using_library "adap_parameters_estimator"
  using_library "adap_samples_input"
- using_library "motion_model"
+ #using_library "motion_model"
  
  import_types_from "adap_parameters_estimator/adap_parameters.hpp"
  import_types_from "adap_parameters_estimator/adap_dataTypes.h"
  import_types_from "adap_samples_input/samples_dataType.h"
- import_types_from "motion_model/MotionModel.hpp"
+ #import_types_from "motion_model/MotionModel.hpp"
 
  import_types_from "base"
 
@@ -23,13 +23,23 @@ task_context "Task" do
    # Properties
    #
    #############################################################       
-   	
-	property "gA", "base::VectorXd"										#gain of model, must have negative values.
-	property "gLambda", "base::MatrixXd"								#gain of parameters, must have positive values.
-	property "thrusterMatrix", "base::MatrixXd"							#matrix of trhuster. identifie the forces and torques aplied for each of n trhuster
-	property "dofs", "adap_parameters_estimator::DOFS", :SURGE			#degree of freedom. If UNINITIALISED the method should identify
-	property "sTime", "double", 0.01 									#sample time
-	property "ftau", "double", 0 										#frequencie of input thruster. Important for filter the parameters
+   
+   # Gain of model, must be a negative values. 	
+   property "gA", "base::VectorXd"			
+   # Gain of parameters, must have positive values.  							
+   property "gLambda", "base::MatrixXd"	
+   # Matrix of trhuster. In case the forces and torques are not directly considered  							
+   property "thrusterMatrix", "base::MatrixXd"	
+   # If true, the input forces are the direct forces and torques applied in AUV. If false, the input are the forces applied by the thruster
+   property "body_forces", "bool", true  		
+   # Degree of freedom to be analyzed. If UNINITIALISED the method should identify (TODO: check it)				
+   property "dofs", "adap_parameters_estimator::DOFS", :SURGE	
+   # Sample time. Use for filter purpouse and integrator 		
+   property "sTime", "double", 0.01
+   # Frequencie of input thruster. Important for filter the parameters 									
+   property "ftau", "double", 0 	
+   # If true, use data from "dynamic_samples". If false use raw data from speed_samples and thruster_samples
+   property "aligned_data", "bool", true         
 
    #############################################################
    #
@@ -49,13 +59,13 @@ task_context "Task" do
 		
     
     input_port "thruster_samples", "base/samples/Joints"
-	    doc "Samples of thruster actions"
+	    doc "Samples of thruster actions. Forces and torques applied in AUV"
 	
     input_port "speed_samples", "base/samples/RigidBodyState"
-		doc "Measured intput containing position, velocity, orientation"
+      doc "Measured input containing velocities"
 		
-	input_port "dynamic_samples", "adap_samples_input::DynamicAUV"
-		doc "Measured input containing acceleration, velocity and force"	
+    input_port "dynamic_samples", "adap_samples_input::DynamicAUV"
+      doc "Measured input containing acceleration, velocity and force, in a aligned way"	
 
    #############################################################
    #
@@ -67,13 +77,52 @@ task_context "Task" do
     output_port "parameters", "adap_parameters_estimator/Parameters"
     	doc "paremeters of the dynamic motion model"
     	
-	output_port "deltaV", "double"
+    output_port "deltaV", "double"
     	doc "error of the real velocity and the estimated velocity of the adap_method"
-    	
-    output_port "normDeltaV", "double"
+    
+  	output_port "normDeltaV", "double"
     	doc "normalized error of the real velocity and the estimated velocity of the adap_method"
 
     
-    port_driven "dynamic_samples"
+    port_driven 
+end
+
+
+
+##########################################################################################
+##########################################################################################
+
+task_context "Evaluation" do
+    
+  needs_configuration
+  #************************************************************************************
+  #*****                              PROPERTIES                                  *****
+  #************************************************************************************
+	
+	# define degree of freedom to be evaluate
+  property "dof", "adap_parameters_estimator::DOFS", :SURGE
+
+  #************************************************************************************
+  #*****                             INPUT PORTS                                  *****
+  #************************************************************************************
+
+  #Input ports receive the RBS from the model and from the measured velocity and will compare the accurace of the model's parameters.
+  input_port  "model_velocity", "/base/samples/RigidBodyState"
+  input_port  "measured_velocity", "/base/samples/RigidBodyState"
+
+  #************************************************************************************
+  #*****                            OUTPUT PORTS                                  *****
+  #************************************************************************************
+
+  #This output port will provide the error between the two velocities.
+  output_port  "error_velocity", "double"
+  
+  #This output port will provide the Mean Avarage Error (MAE)= mean(|error_velocity|).
+  output_port  "mae_velocity", "double"
+  
+  #This output port will provide the normalized MAE = mean(|error_velocity|) / mean(|velocity_measured|).
+  output_port  "norm_mae_velocity", "double"
+
+  port_driven 
 end
 
