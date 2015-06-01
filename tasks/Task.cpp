@@ -60,6 +60,8 @@ void Task::updateHook()
 {
     TaskBase::updateHook();
 
+    bool doIt = false;
+
     static bool first_time = true;
     static Parameters modelParameters;
 
@@ -164,34 +166,37 @@ void Task::updateHook()
 				// Converting from base::samples::Joints to base::Vector6d
 				if(dynamic.joints.elements.size()!=6)
 				{
-					std::cout<<std::endl<< "Make sure the input forces have the right dimention" <<std::endl;
+					std::cout<<std::endl<< "Make sure the input forces have the right dimension" <<std::endl;
 				}
 				for (int i = 0; i < dynamic.joints.elements.size(); i++)
 					forces[i] = dynamic.joints.elements[i].effort;
+
+				doIt = true;
 			}
 			else if(!body_forces)
 			{
 				for (int i = 0; i < dynamic.joints.elements.size(); i++)
 					{thruster[i] = dynamic.joints.elements[i].effort;}
 					adapParam->forces_torques(thruster,forces);
+					doIt = true;
 			}
 		}
     }
 
+    if(doIt)
+	{
+    	adapParam->parameters_estimation(forces, velocity, parameters, deltaV, normDeltaV);
 
-	adapParam->parameters_estimation(forces, velocity, parameters, deltaV, normDeltaV);
+		modelParameters.inertiaCoeff[dof].positive           = parameters[0];
+		modelParameters.quadraticDampingCoeff[dof].positive  = parameters[1];
+		modelParameters.linearDampingCoeff[dof].positive     = parameters[2];
+		modelParameters.gravityAndBuoyancy[dof]              = parameters[3];
 
 
-	modelParameters.inertiaCoeff[dof].positive           = parameters[0];
-	modelParameters.quadraticDampingCoeff[dof].positive  = parameters[1];
-	modelParameters.linearDampingCoeff[dof].positive     = parameters[2];
-	modelParameters.gravityAndBuoyancy[dof]              = parameters[3];
-
-
-	_parameters.write(modelParameters);
-	_deltaV.write(deltaV);
-	_normDeltaV.write(normDeltaV);
-
+		_parameters.write(modelParameters);
+		_deltaV.write(deltaV);
+		_normDeltaV.write(normDeltaV);
+	}
 
 }
 void Task::errorHook()
