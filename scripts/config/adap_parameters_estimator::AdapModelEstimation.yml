@@ -1,6 +1,6 @@
 --- name:dagon
 # Degree of freedom to be analyzed. If UNINITIALISED the method should identify (TODO: check it)
-dofs: :SURGE
+#dofs: :SURGE
 # Frequencie of input thruster. Important for filter the parameters
 ftau: 0.2
 # Gain of model, must be a negative values.
@@ -48,9 +48,17 @@ metadata:
   input_ports: []
   output_ports: []
 # Sample time. Use for filter purpouse and integrator
-sTime: 0.01
-  
-  
-  
+sTime: 2.0
 
+--- name:dagon_surge 
+dofs: :SURGE 
+  
+--- name:dagon_sway 
+dofs: :SWAY 
+
+--- name:dagon_heave 
+dofs: :HEAVE 
+
+--- name:dagon_yaw 
+dofs: :YAW 
   

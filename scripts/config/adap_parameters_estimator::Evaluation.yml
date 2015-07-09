@@ -1,0 +1,24 @@
+--- name:surge
+# define degree of freedom to be evaluate
+dof: :SURGE
+
+--- name:sway
+# define degree of freedom to be evaluate
+dof: :SWAY
+
+--- name:heave
+# define degree of freedom to be evaluate
+dof: :HEAVE
+
+--- name:roll
+# define degree of freedom to be evaluate
+dof: :ROLL
+
+--- name:pitch
+# define degree of freedom to be evaluate
+dof: :PITCH
+
+--- name:yaw
+# define degree of freedom to be evaluate
+dof: :YAW
+

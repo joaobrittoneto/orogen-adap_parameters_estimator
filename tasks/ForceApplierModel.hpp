@@ -1,14 +1,13 @@
 /* Generated from orogen/lib/orogen/templates/tasks/Task.hpp */
 
-#ifndef ADAP_PARAMETERS_ESTIMATOR_EVALUATION_TASK_HPP
-#define ADAP_PARAMETERS_ESTIMATOR_EVALUATION_TASK_HPP
+#ifndef ADAP_PARAMETERS_ESTIMATOR_FORCEAPPLIERMODEL_TASK_HPP
+#define ADAP_PARAMETERS_ESTIMATOR_FORCEAPPLIERMODEL_TASK_HPP
 
-#include "adap_parameters_estimator/EvaluationBase.hpp"
-#include "adap_parameters_estimator/adap_parameters.hpp"
+#include "adap_parameters_estimator/ForceApplierModelBase.hpp"
 
 namespace adap_parameters_estimator {
 
-    /*! \class Evaluation 
+    /*! \class ForceApplierModel
      * \brief The task context provides and requires services. It uses an ExecutionEngine to perform its functions.
      * Essential interfaces are operations, data flow ports and properties. These interfaces have been defined using the oroGen specification.
      * In order to modify the interfaces you should (re)use oroGen and rely on the associated workflow.
@@ -17,54 +16,51 @@ namespace adap_parameters_estimator {
      * The name of a TaskContext is primarily defined via:
      \verbatim
      deployment 'deployment_name'
-         task('custom_task_name','adap_parameters_estimator::Evaluation')
+         task('custom_task_name','adap_parameters_estimator::ForceApplier')
      end
      \endverbatim
      *  It can be dynamically adapted when the deployment is called with a prefix argument. 
      */
-    class Evaluation : public EvaluationBase
+    class ForceApplierModel : public ForceApplierModelBase
     {
-	friend class EvaluationBase;
+	friend class ForceApplierModelBase;
     protected:
 
-		adap_parameters_estimator::DOFS dof;
+	int numberOfThrusters;
+	base::VectorXd CoeffPos;
+	base::VectorXd CoeffNeg;
+	base::MatrixXd TCM;
+	std::vector<base::JointState::MODE> controlModes;
+	std::vector<std::string> thrusterNames;
+	double thrusterVoltage;
+	base::VectorXd offsetForces;
 
-		// Queue of model and measured samples
-		std::queue<base::samples::RigidBodyState> queueModel;
-		std::queue<base::samples::RigidBodyState> queueMeasured;
-		int max_queue_size	= 100;
 
-		// Aux variables
-		base::samples::RigidBodyState	lastModelSample;
-		base::samples::RigidBodyState	lastMeasuredSample;
-
-        virtual void model_velocityCallback(const base::Time &ts, const ::base::samples::RigidBodyState &model_velocity_sample);
-
-        virtual void measured_velocityCallback(const base::Time &ts, const ::base::samples::RigidBodyState &measured_velocity_sample);
-
-        bool handleModel(const base::samples::RigidBodyState &sample);
-        bool handleMeasurement(const base::samples::RigidBodyState &sample);
-
-        bool matchPose(const base::samples::RigidBodyState &model, base::samples::RigidBodyState &measured);
-        void checkSizeQueue(std::queue<base::samples::RigidBodyState> queue);
+	base::samples::Joints forcesOut;
+	base::samples::Joints thrusterForces;
 
     public:
-        /** TaskContext constructor for Evaluation
+
+		void calcThrustersForces(base::samples::Joints &forcesThruster, base::VectorXd &forces);
+		void calcOutput(base::samples::Joints &out_cmd, base::VectorXd &forces);
+		bool checkControlInput(base::samples::Joints &forcesThruster);
+
+        /** TaskContext constructor for ForceApplier
          * \param name Name of the task. This name needs to be unique to make it identifiable via nameservices.
          * \param initial_state The initial TaskState of the TaskContext. Default is Stopped state.
          */
-        Evaluation(std::string const& name = "adap_parameters_estimator::Evaluation");
+        ForceApplierModel(std::string const& name = "adap_parameters_estimator::ForceApplier");
 
-        /** TaskContext constructor for Evaluation 
+        /** TaskContext constructor for ForceApplier
          * \param name Name of the task. This name needs to be unique to make it identifiable for nameservices. 
          * \param engine The RTT Execution engine to be used for this task, which serialises the execution of all commands, programs, state machines and incoming events for a task. 
          * 
          */
-        Evaluation(std::string const& name, RTT::ExecutionEngine* engine);
+        ForceApplierModel(std::string const& name, RTT::ExecutionEngine* engine);
 
-        /** Default deconstructor of Evaluation
+        /** Default deconstructor of ForceApplier
          */
-	~Evaluation();
+	~ForceApplierModel();
 
         /** This hook is called by Orocos when the state machine transitions
          * from PreOperational to Stopped. If it returns false, then the

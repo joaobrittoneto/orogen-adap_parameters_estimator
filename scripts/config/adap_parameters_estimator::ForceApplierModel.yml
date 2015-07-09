@@ -1,0 +1,82 @@
+--- name:dagon
+# Matrix of trhuster. Identifie the forces and torques aplied for each of n trhuster
+TCM:
+  rows: 6
+  cols: 5
+  data:
+  - 0.0 ## dive_tail
+  - 0.0
+  - -1.0
+  - 0.0
+  - -0.39
+  - 0.0
+  - 0.0 ## dive_head
+  - 0.0
+  - -1.0
+  - 0.0
+  - 0.16
+  - 0.0
+  - 1.0 ## surge_left
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - -0.38
+  - 1.0 ## surge_right
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.38
+  - 0.0 ## sway_tail
+  - 1.0
+  - 0.0
+  - 0.06
+  - 0.0
+  - -0.55
+# If left empty, uses RAW by default
+control_modes: 
+  - SPEED
+  - SPEED
+  - SPEED
+  - SPEED
+  - SPEED
+# no documentation available for this property
+metadata:
+  metadata: []
+  properties: []
+  input_ports: []
+  output_ports: []
+# Names of the thrusters
+# Leave empty to use no names
+names: ["dive_tail", "dive_head", "surge_left", "surge_right", "sway_tail"]
+# The amount of actuators the vehicle has
+number_of_thruster: 5
+# In case the control mode is PWM, used to convert the signal into DC Voltage
+thrusterVoltage: 0.0
+# Convert thruster signal into forces, in negative direction. Should have the size of amount_of_actuators
+thruster_coefficients_Neg:
+  data: 
+  - 0.01541807
+  - 0.01541807
+  - 0.083426624
+  - 0.083426624
+  - 0.01992116    # Opposite polarite, from observation    
+# Convert thruster signal into forces, in positive direction. Should have the size of amount_of_actuators
+thruster_coefficients_Pos:
+  data: 
+  - 0.01992116
+  - 0.01992116 
+  - 0.113126622
+  - 0.113126622
+  - 0.01541807     # Opposite polarite, from observation  
+# Offset error of thruster forces found in motion identification. Added to the resulted forces
+offset_forces:
+  data: 
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+  - 0.0
+

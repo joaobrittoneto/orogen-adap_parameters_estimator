@@ -190,7 +190,47 @@ task_context "ForceApplier" do
      exception_states :WRONG_SIZE_OF_CONTROLMODES, :WRONG_SIZE_OF_THRUSTER_COEFFICIENTS, :WRONG_SIZE_OF_NAMES,
                       :WRONG_SIZE_OF_THRUSTER_MATRIX, :UNSET_THRUSTER_INPUT, :UNEXPECTED_THRUSTER_INPUT 
            
-     port_driven 
+     port_driven 'thruster_samples'
+end
+
+
+task_context "ForceApplierModel" do    
+    needs_configuration
+     
+     # The amount of actuators the vehicle has
+     property "number_of_thruster", "int"
+     # Convert thruster signal into forces, in positive direction. Should have the size of amount_of_actuators 
+     property "thruster_coefficients_Pos", "base::VectorXd"
+     # Convert thruster signal into forces, in negative direction. Should have the size of amount_of_actuators
+     property "thruster_coefficients_Neg", "base::VectorXd"    
+     # Matrix of trhuster. Identifie the forces and torques aplied for each of n trhuster
+     property "TCM", "base::MatrixXd" 
+     # If left empty, uses RAW by default
+     property "control_modes", "std::vector<base::JointState::MODE>" 
+     # In case the control mode is PWM, used to convert the signal into DC Voltage  
+     property "thrusterVoltage", "double", 0  
+     # Names of the thrusters
+     # Leave empty to use no names
+     property "names", "std::vector<std::string>"  
+     # Offset error of thruster forces found in motion identification. Added to the resulted forces
+     property "offset_forces", "base::VectorXd"  
+       
+    
+     ## Thrusters signal    
+     input_port('thruster_samples', '/base/samples/Joints').
+        doc("thrusters signal")    
+     
+     ## Forces and torques applied in the vehicle in body-frame    
+     output_port('forces', '/base/samples/Joints').
+        doc("Forces applied in the auv. Convert the input signal into force and applied the thruster matrix.")  
+     ## Forces and signals applied for each thruster in the vehicle    
+     output_port('thruster_forces', '/base/samples/Joints').
+        doc("Forces and signals applied by each thruster in the auv.")         
+   
+     exception_states :WRONG_SIZE_OF_CONTROLMODES, :WRONG_SIZE_OF_THRUSTER_COEFFICIENTS, :WRONG_SIZE_OF_NAMES,
+                      :WRONG_SIZE_OF_THRUSTER_MATRIX, :UNSET_THRUSTER_INPUT, :UNEXPECTED_THRUSTER_INPUT 
+           
+     port_driven 'thruster_samples'
 end
 
 
@@ -232,7 +272,18 @@ task_context "Evaluation" do
   #This output port will provide the normalized MAE = mean(|error_velocity|) / mean(|velocity_measured|).
   output_port  "norm_mae_velocity", "double"
 
-  port_driven 
+  #******************************
+  #** Aggregator Parameters ***** 
+  #******************************
+  stream_aligner do
+           
+     align_port("measured_velocity", 0.09)
+     align_port("model_velocity", 0.09)
+     max_latency(0.2)
+  end   
+ 
+  periodic 0.01
+  
 end
 
 

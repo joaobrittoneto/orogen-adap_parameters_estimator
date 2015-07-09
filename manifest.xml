@@ -7,12 +7,8 @@
   <url></url>
   <logo></logo>
   <depend package="base/cmake" />
+  
   <depend package="adap_model/adap_parameters_estimator"/>
-  <!--
-   To add any dependencies use the depend tag
-  <depend package="dummy-dependency-0" />
-	...
-  <depend package="dummy-dependency-n-1" />
-  <depend package="dummy-dependency-n" />
-  -->
+  <depend package="drivers/orogen/aggregator" />
+  
 </package>

@@ -5,50 +5,46 @@ require './gui/gui_parameters.rb'
 
 include Orocos
 
-#Orocos::CORBA.name_service = "192.168.128.51"  # Avalon
+#Orocos::CORBA.name_service = "192.168.128.50"  # Flatfish
 
 #load log file 
 #######################################################################
-@log_replay = Orocos::Log::Replay.open("../../../../../Log_files/dagon_logFiles/dagon_model_parameter_estimation/20150409-1743/linX.log")
-
-#@log_replay = Orocos::Log::Replay.open("../../../../../Log_files/dagon_logFiles/dagon_model_parameter_estimation/20150409-1707/linX.log")
-
-#@log_replay = Orocos::Log::Replay.open("../../../../../Log_files/dagon_logFiles/dagon_model_parameter_estimation/20150414-1519/linY.log")
-
-#@log_replay = Orocos::Log::Replay.open("../../../../../Log_files/dagon_logFiles/dagon_model_parameter_estimation/20150414-1615/linY.log")
-
-#@log_replay = Orocos::Log::Replay.open("../../../../../Log_files/dagon_logFiles/dagon_model_parameter_estimation/20150414-1635/angZ.log")
-
-#@log_replay = Orocos::Log::Replay.open("../../../../../Log_files/dagon_logFiles/dagon_model_parameter_estimation/20150414-1703/angZ.log")
-
-#@log_replay = Orocos::Log::Replay.open("../../../../../Log_files/dagon_logFiles/dagon_model_parameter_estimation/20150414-1724/angZ.log")
+@log_replay = Orocos::Log::Replay.open("../../../../../Log_files/flatfish_logFiles/20150629-1850/linX.log")
 
 #######################################################################
 
 Orocos.run 'adap_parameters_estimator::ForceApplier'        => 'forces&torques',
-           'adap_parameters_estimator::AdapModelEstimation' => 'adap_model' do
+           'adap_parameters_estimator::AdapModelEstimation' => 'adap_model',
+           'adap_samples_input::GetPoseForce'               => 'adap_samples', do
 
 
     forces_torques      = TaskContext.get 'forces&torques'
     adap_model          = TaskContext.get 'adap_model'
+    adap_samples   = TaskContext.get 'adap_samples'    
+    
+    #########################################################
+    
+    pose_estimator     = @log_replay.pose_estimator
+#    pose_estimation     = @log_replay.pose_estimator_dead_reckoning    
+#    thurster            = @log_replay.thrusters  
+    thurster            = @log_replay.acceleration_controller     
+    #########################################################
+    
 
-    forces_torques.apply_conf_file('config/adap_parameters_estimator::ForceApplier.yml',['dagon']) 
+    forces_torques.apply_conf_file('config/adap_parameters_estimator::ForceApplier.yml',['flatfish']) 
     adap_model.apply_conf_file('config/adap_parameters_estimator::AdapModelEstimation.yml',['dagon', 'dagon_surge'])
     
  
-    pose_estimation     = @log_replay.pose_estimation
-    dispatcher          = @log_replay.dispatcher   
-    
-
-    dispatcher.all_joint_state.connect_to       forces_torques.thruster_samples  
+#    thurster.state_out.connect_to       forces_torques.thruster_samples  
+    thurster.cmd_out.connect_to       forces_torques.thruster_samples  
           
-    pose_estimation.pose_samples.connect_to     adap_model.pose_samples,        :type => :buffer, :size => 100 
+    pose_estimator.pose_samples.connect_to      adap_model.pose_samples,        :type => :buffer, :size => 100 
     forces_torques.forces.connect_to            adap_model.forces_samples,      :type => :buffer, :size => 100      
     
-    adap_model.aggregator_max_latency = 0.5
+    adap_model.aggregator_max_latency = 2.0
     adap_model.pose_samples_period = 0.0001
     adap_model.forces_samples_period = 0.01
-    adap_model.sTime = 0.1
+    adap_model.sTime = 2.0
     
     forces_torques.configure      
     adap_model.configure
@@ -62,7 +58,7 @@ Orocos.run 'adap_parameters_estimator::ForceApplier'        => 'forces&torques',
    ## Defining the proxy for each task 
    parametersproxy      = Orocos::Async.proxy("adap_model")
    inputforcesproxy     = Orocos::Async.proxy("forces&torques")
-   inputvelocitiesproxy = Orocos::Async.proxy("pose_estimation")        
+   inputvelocitiesproxy = Orocos::Async.proxy("pose_estimator")        
    
 	
    ## Defining the port variables using the proxys

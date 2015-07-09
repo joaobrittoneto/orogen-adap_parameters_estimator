@@ -1,20 +1,20 @@
 /* Generated from orogen/lib/orogen/templates/tasks/Task.cpp */
 
-#include "ForceApplier.hpp"
+#include "ForceApplierModel.hpp"
 
 using namespace adap_parameters_estimator;
 
-ForceApplier::ForceApplier(std::string const& name)
-    : ForceApplierBase(name)
+ForceApplierModel::ForceApplierModel(std::string const& name)
+    : ForceApplierModelBase(name)
 {
 }
 
-ForceApplier::ForceApplier(std::string const& name, RTT::ExecutionEngine* engine)
-    : ForceApplierBase(name, engine)
+ForceApplierModel::ForceApplierModel(std::string const& name, RTT::ExecutionEngine* engine)
+    : ForceApplierModelBase(name, engine)
 {
 }
 
-ForceApplier::~ForceApplier()
+ForceApplierModel::~ForceApplierModel()
 {
 }
 
@@ -24,9 +24,9 @@ ForceApplier::~ForceApplier()
 // hooks defined by Orocos::RTT. See ForceApplier.hpp for more detailed
 // documentation about them.
 
-bool ForceApplier::configureHook()
+bool ForceApplierModel::configureHook()
 {
-    if (! ForceApplierBase::configureHook())
+    if (! ForceApplierModelBase::configureHook())
         return false;
 
     numberOfThrusters	= _number_of_thruster.get();
@@ -65,6 +65,12 @@ bool ForceApplier::configureHook()
 		return false;
 	}
 
+    offsetForces	=	_offset_forces.get();
+    if(offsetForces.size() != 6 ){
+		exception(WRONG_SIZE_OF_THRUSTER_MATRIX);
+		return false;
+	}
+
     // The three first elements are the linear forces and the last three are the torques applied in the auv in body-frame
     forcesOut.resize(6);
     std::vector<std::string> forces_names;
@@ -79,19 +85,19 @@ bool ForceApplier::configureHook()
 
     return true;
 }
-bool ForceApplier::startHook()
+bool ForceApplierModel::startHook()
 {
-    if (! ForceApplierBase::startHook())
+    if (! ForceApplierModelBase::startHook())
         return false;
     return true;
 }
-void ForceApplier::updateHook()
+void ForceApplierModel::updateHook()
 {
-    ForceApplierBase::updateHook();
+    ForceApplierModelBase::updateHook();
 
     base::VectorXd			forces;
 
-    while (_thruster_samples.read(thrusterForces) == RTT::NewData)
+    if (_thruster_samples.read(thrusterForces) == RTT::NewData)
     {
     	if(checkControlInput(thrusterForces))
 		{
@@ -106,21 +112,21 @@ void ForceApplier::updateHook()
     }
 
 }
-void ForceApplier::errorHook()
+void ForceApplierModel::errorHook()
 {
-    ForceApplierBase::errorHook();
+    ForceApplierModelBase::errorHook();
 }
-void ForceApplier::stopHook()
+void ForceApplierModel::stopHook()
 {
-    ForceApplierBase::stopHook();
+    ForceApplierModelBase::stopHook();
 }
-void ForceApplier::cleanupHook()
+void ForceApplierModel::cleanupHook()
 {
-    ForceApplierBase::cleanupHook();
+    ForceApplierModelBase::cleanupHook();
 }
 
 
-void ForceApplier::calcThrustersForces(base::samples::Joints &forcesThruster, base::VectorXd &forces)
+void ForceApplierModel::calcThrustersForces(base::samples::Joints &forcesThruster, base::VectorXd &forces)
 {
 	forces.resize(numberOfThrusters);
 	for (int i=0; i<numberOfThrusters; i++)
@@ -149,17 +155,17 @@ void ForceApplier::calcThrustersForces(base::samples::Joints &forcesThruster, ba
 }
 
 
-void ForceApplier::calcOutput(base::samples::Joints &out_cmd, base::VectorXd &forces)
+void ForceApplierModel::calcOutput(base::samples::Joints &out_cmd, base::VectorXd &forces)
 {
 	base::Vector6d outCmd = TCM * forces;
 	for(int i; i<6; i++)
 	{
-		out_cmd.elements[i].effort = outCmd[i];
+		out_cmd.elements[i].effort = outCmd[i] + offsetForces[i];
 	}
 }
 
 // Check thrusters input
-bool ForceApplier::checkControlInput(base::samples::Joints &forcesThruster)
+bool ForceApplierModel::checkControlInput(base::samples::Joints &forcesThruster)
 {
 	std::string textElement;
 	bool checkError	= false;

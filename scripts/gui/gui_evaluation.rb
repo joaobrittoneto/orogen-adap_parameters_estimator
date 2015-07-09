@@ -7,7 +7,8 @@
 
 class Supervisory
   
- def initialize(model, parent = nil)
+# def initialize(model, parent = nil)
+ def initialize(parent = nil)
 
    @window = Vizkit.load(File.join(File.dirname(__FILE__), 'Evaluation.ui'), parent)
     
@@ -45,7 +46,7 @@ class Supervisory
         thrusterMatrix = Eigen::MatrixX.new(6,6)
         gravityBuoyancyVector = Eigen::VectorX.new(6)
               
-        modelParamSample = model.model_parameters
+#        modelParamSample = model.model_parameters
           
         inertia = [@window.inertia_x.value,0,0,0,0,0,  0,@window.inertia_y.value,0,0,0,0,  0,0,@window.inertia_z.value,0,0,0,  0,0,0,@window.inertia_rx.value,0,0,  0,0,0,0,@window.inertia_ry.value,0,  0,0,0,0,0,@window.inertia_rz.value]
         quadraticDamping = [@window.quadratic_x.value,0,0,0,0,0,  0,@window.quadratic_y.value,0,0,0,0,  0,0,@window.quadratic_z.value,0,0,0,  0,0,0,@window.quadratic_rx.value,0,0,  0,0,0,0,@window.quadratic_ry.value,0,  0,0,0,0,0,@window.quadratic_rz.value]
@@ -61,37 +62,35 @@ class Supervisory
         thrusterMatrix.from_a(thuster, 6, thuster.size/6, false)
         gravityBuoyancyVector.from_a(gravityBuoyancy)
         
-        modelParamSample.inertiaMatrix = inertiaMatrix
-	modelParamSample.linearDampingMatrix = linearDampingMatrix
-	modelParamSample.quadraticDampingMatrix = quadraticDampingMatrix
-	modelParamSample.coriolisCentripetalMatrix = coriolisCentripetalMatrix
-	modelParamSample.thrusterMatrix = thrusterMatrix
-        modelParamSample.gravityBuoyancyVector = gravityBuoyancyVector
-	#modelParamSample.integrationStep = integrationStep
+#       modelParamSample.inertiaMatrix = inertiaMatrix
+#	modelParamSample.linearDampingMatrix = linearDampingMatrix
+#	modelParamSample.quadraticDampingMatrix = quadraticDampingMatrix
+#	modelParamSample.coriolisCentripetalMatrix = coriolisCentripetalMatrix
+#	modelParamSample.thrusterMatrix = thrusterMatrix
+#       modelParamSample.gravityBuoyancyVector = gravityBuoyancyVector
+#	modelParamSample.integrationStep = integrationStep
 	
-	model.model_parameters = modelParamSample
+#	model.model_parameters = modelParamSample
         
-   
    end
-   
- 
  end
+
 
   def v_model (port)
     @port = port
     @port.connect_to do |sample, _|
-        @window.v.update(sample.velocity[0], "Velocity model")
-        @window.v.set_y_axis_scale(-0.6, 0.6)
-        #@window.v.getLegend.setVisible(true)     
+        @window.v.update(sample.velocity[0], "V_Model ")
+        @window.v.set_y_axis_scale(-0.5, 1.0)
+        @window.v.getLegend.setVisible(true)     
     end
   end  
   
   def v_measured (port)
     @port = port
     @port.connect_to do |sample, _|
-        @window.v.update(sample.velocity[0], "Velocity measured")
-        @window.v.set_y_axis_scale(-0.6, 0.6) 
-        #@window.v.getLegend.setVisible(true)                           
+        @window.v.update(sample.velocity[0], "V_Measured")
+        @window.v.set_y_axis_scale(-0.5, 1.0) 
+        @window.v.getLegend.setVisible(true)                           
     end
   end 
   

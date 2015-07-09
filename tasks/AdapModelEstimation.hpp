@@ -32,10 +32,16 @@ namespace adap_parameters_estimator {
 		// adaptive method
 		adap_parameters_estimator::AdapParameters *adapParam;
 
-		// Queue of samples of forces and velocities
+		// Queue of forces and velocities samples
 		std::queue<base::samples::RigidBodyState> queuePose;
+		std::queue<double> queueStep;
 		std::queue<base::samples::Joints> queueForces;
 		int sizeQueue = 5;
+
+		// Aux variables
+		base::samples::RigidBodyState	lastPoseSample;
+		base::samples::Joints			lastForceSample;
+		double max_step;
 
 		// Output model's parameters
 		Parameters modelParameters;
@@ -43,6 +49,18 @@ namespace adap_parameters_estimator {
         virtual void forces_samplesCallback(const base::Time &ts, const ::base::samples::Joints &forces_samples_sample);
 
         virtual void pose_samplesCallback(const base::Time &ts, const ::base::samples::RigidBodyState &pose_samples_sample);
+
+        bool matchForce(const base::samples::RigidBodyState &pose_sample, base::samples::Joints &forces_output);
+
+        bool getVectorForces(const base::samples::Joints &forces_sample, base::Vector6d &forces);
+        void getVectorVelocities(const base::samples::RigidBodyState &pose_sample, base::Vector6d &velocities);
+
+        void convertParameters(const base::Vector4d &parameters, Parameters &modelParameters, DOFS dof);
+
+        void estimateStep(double &step);
+
+        bool handleMeasurement(const base::samples::RigidBodyState &rbs_sample, double &step);
+        bool handleMeasurement(const base::samples::Joints &force_sample);
 
     public:
         /** TaskContext constructor for AdapModelEstimatation

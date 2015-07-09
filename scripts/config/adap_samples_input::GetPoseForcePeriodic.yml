@@ -1,0 +1,34 @@
+--- name:dagon
+#########################
+## stream aligner
+#########################
+# maximum latency, in seconds, of the stream aligner. The aligner will start dropping samples if the difference between the last output and last input is greater than this
+aggregator_max_latency: 0.5
+# minimum time, in s, between two sequential samples arrive on forces_samples
+forces_samples_period: 0.001
+# minimum time, in s, between two sequential samples arrive on pose_samples
+pose_samples_period: 0.0001
+# minimum system time in s between two status readings
+stream_aligner_status_period: 1.0
+
+#########################
+## Savitzky-Golay filter parameters
+#########################
+# Half minus one amount of data used to compute the acceleration
+halfSize: 50
+# no documentation available for this property
+metadata:
+  metadata: []
+  properties: []
+  input_ports: []
+  output_ports: []
+# degree of polynomial for filter, to get acceleration
+poly: 3.0
+# Position of the computed acceleration. from -halfSize to +halfSize
+posFilter: 0.0
+# sample time
+step: 0.1
+# If true, data will be aligned and transmitted (use for adaptive method). If false, acceleration will be computed, with delay (use for least square method).
+#     property "adap_method", "bool", true
+
+
