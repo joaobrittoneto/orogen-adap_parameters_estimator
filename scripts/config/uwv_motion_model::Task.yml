@@ -802,14 +802,14 @@ model_parameters:
   sim_per_cycle: 10
   massMatrix:
     data:
-    - 421.0     # surge
+    - 890.29     # surge
     - 0.0
     - 0.0
     - 0.0
     - 0.0
     - 0.0
     - 0.0       #### 
-    - 10000.0     # sway
+    - 1042.95     # sway
     - 0.0
     - 0.0
     - 0.0
@@ -878,80 +878,80 @@ model_parameters:
     - 0.0       # yaw
   linDampMatrix:        
     data:
-    - 9.3     # surge
+    - 38.80     # surge
     - 0.0
     - 0.0
     - 0.0
     - 0.0
     - 0.0
     - 0.0       #### 
-    - 100.0     # sway
+    - 1.4554     # sway
     - 0.0
     - 0.0
     - 0.0
     - 0.0
     - 0.0       #### 
     - 0.0
-    - 100.0     # heave
+    - 1000.0     # heave
     - 0.0
     - 0.0
     - 0.0
     - 0.0       #### 
     - 0.0
     - 0.0
-    - 100.0       # roll
+    - 1000.0       # roll
     - 0.0
     - 0.0       
     - 0.0       #### 
     - 0.0
     - 0.0
     - 0.0
-    - 100.0       # pitch
+    - 1000.0       # pitch
     - 0.0
     - 0.0       #### 
     - 0.0
     - 0.0
     - 0.0
     - 0.0
-    - 100.0       # yaw
+    - 1000.0       # yaw
   quadDampMatrix:
     data:
-    - 2.7     # surge
+    - 6.786     # surge
     - 0.0
     - 0.0
     - 0.0
     - 0.0
     - 0.0
     - 0.0       #### 
-    - 100.0     # sway
+    - 0.10512     # sway
     - 0.0
     - 0.0
     - 0.0
     - 0.0
     - 0.0       #### 
     - 0.0
-    - 100.0     # heave
+    - 1000.0     # heave
     - 0.0
     - 0.0
     - 0.0
     - 0.0       #### 
     - 0.0
     - 0.0
-    - 100.0       # roll
+    - 1000.0       # roll
     - 0.0
     - 0.0       
     - 0.0       #### 
     - 0.0
     - 0.0
     - 0.0
-    - 100.0       # pitch
+    - 1000.0       # pitch
     - 0.0
     - 0.0       #### 
     - 0.0
     - 0.0
     - 0.0
     - 0.0
-    - 100.0       # yaw
+    - 1000.0       # yaw
   thruster_control_matrix:
     rows: 6
     cols: 6
@@ -1018,8 +1018,8 @@ model_parameters:
   - positive: 0.0
     negative: 0.0
   thruster_coefficient_rpm:
-  - positive: 0.0
-    negative: 0.0
+  - positive: 0.00006698667
+    negative: 0.00006698667
   initial_condition:
   - 0.0 # position
   - 0.0

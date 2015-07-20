@@ -16,7 +16,7 @@ class Supervisory
     @stime = adap.sTime
     @min_norm_error = 10
     @old_min_norm_error = 10
-    
+    @first_time = true
         
     ##############
     # used in the deltaV and normDeltaV dor adjust the y_scale
@@ -130,6 +130,52 @@ class Supervisory
       end
       puts @dofs
    end
+   
+   if @first_time 
+      gainA = Eigen::VectorX.new(6)
+      gainLambda = Eigen::MatrixX.new(6,4) 
+      frequency = Eigen::VectorX.new(6)  
+      
+      gainA = adap.gA 
+      gainLambda = adap.gLambda
+      
+      @window.gainAx.value = gainA[0]
+      @window.gainAy.value = gainA[1]
+      @window.gainAz.value = gainA[2]
+      @window.gainArx.value = gainA[3] 
+      @window.gainAry.value = gainA[4]
+      @window.gainArz.value = gainA[5]
+      
+      puts @window.gainAx.value 
+      
+      @window.gainL1x.value = gainLambda[0,0]
+      @window.gainL2x.value = gainLambda[0,1]
+      @window.gainL3x.value = gainLambda[0,2]
+      @window.gainL4x.value = gainLambda[0,3] 
+      @window.gainL1y.value = gainLambda[1,0]
+      @window.gainL2y.value = gainLambda[1,1] 
+      @window.gainL3y.value = gainLambda[1,2]
+      @window.gainL4y.value = gainLambda[1,3]
+      @window.gainL1z.value = gainLambda[2,0]
+      @window.gainL2z.value = gainLambda[2,1]
+      @window.gainL3z.value = gainLambda[2,2]
+      @window.gainL4z.value = gainLambda[2,3]
+      @window.gainL1rx.value = gainLambda[3,0]
+      @window.gainL2rx.value = gainLambda[3,1]
+      @window.gainL3rx.value = gainLambda[3,2] 
+      @window.gainL4rx.value = gainLambda[3,3]
+      @window.gainL1ry.value = gainLambda[4,0] 
+      @window.gainL2ry.value = gainLambda[4,1]
+      @window.gainL3ry.value = gainLambda[4,2]
+      @window.gainL4ry.value = gainLambda[4,3]
+      @window.gainL1rz.value = gainLambda[5,0]
+      @window.gainL2rz.value = gainLambda[5,1]
+      @window.gainL3rz.value = gainLambda[5,2]
+      @window.gainL4rz.value = gainLambda[5,3]
+      
+      @first_time = false  
+   end
+   
    
    
    # apply the configuration into the components

@@ -8,11 +8,24 @@
 class Supervisory
   
 # def initialize(model, parent = nil)
- def initialize(parent = nil)
+ def initialize(dof, parent = nil)
 
    @window = Vizkit.load(File.join(File.dirname(__FILE__), 'Evaluation.ui'), parent)
-    
- 
+   case dof 
+   when :SURGE
+        @dof = 0
+   when :SWAY
+        @dof = 1
+   when :HEAVE
+        @dof = 2
+   when :ROLL
+        @dof = 3
+   when :PITCH
+        @dof = 4
+   when :YAW
+        @dof = 5                         
+   end
+         
   ##########################################################################
   #                     CONFIGURING PLOT2D OBJETCS                          #
   ##########################################################################
@@ -79,17 +92,26 @@ class Supervisory
   def v_model (port)
     @port = port
     @port.connect_to do |sample, _|
-        @window.v.update(sample.velocity[0], "V_Model ")
-        @window.v.set_y_axis_scale(-0.5, 1.0)
+        if @dof < 3
+                @window.v.update(sample.velocity[@dof], "V_Model ")
+        elsif @dof < 6       
+                @window.v.update(sample.angular_velocity[(@dof-3)], "V_Model ")
+        end        
+        #@window.v.set_y_axis_scale(-0.5, 1.0)
         @window.v.getLegend.setVisible(true)     
     end
   end  
   
   def v_measured (port)
     @port = port
+    puts @dof
     @port.connect_to do |sample, _|
-        @window.v.update(sample.velocity[0], "V_Measured")
-        @window.v.set_y_axis_scale(-0.5, 1.0) 
+        if @dof < 3
+                @window.v.update(sample.velocity[@dof], "V_Measured")
+        elsif @dof < 6 
+                @window.v.update(sample.angular_velocity[(@dof-3)], "V_Measured")
+        end
+        #@window.v.set_y_axis_scale(-0.5, 1.0) 
         @window.v.getLegend.setVisible(true)                           
     end
   end 
@@ -98,7 +120,7 @@ class Supervisory
     @port = port
     @port.connect_to do |sample, _|
         @window.error_v.update(sample, "Error velocity (m/s or rad/s)")
-        @window.error_v.set_y_axis_scale(-0.5, 0.5)                       
+        #@window.error_v.set_y_axis_scale(-0.5, 0.5)                       
     end
   end 
   
@@ -106,7 +128,7 @@ class Supervisory
     @port = port
     @port.connect_to do |sample, _|
         @window.maev.update(sample, "MAE velocity")
-        @window.maev.set_y_axis_scale(-0.5, 0.5) 
+        #@window.maev.set_y_axis_scale(-0.5, 0.5) 
         @window.mae_v.display sample                     
     end
   end 
@@ -115,7 +137,7 @@ class Supervisory
     @port = port
     @port.connect_to do |sample, _|
         @window.normmaev.update(sample, "Norm MAE velocity")
-        @window.normmaev.set_y_axis_scale(-0.5, 0.5) 
+        #@window.normmaev.set_y_axis_scale(-0.5, 0.5) 
         @window.norm_mae_v.display sample                     
     end
   end 

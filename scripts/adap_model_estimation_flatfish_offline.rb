@@ -9,13 +9,17 @@ include Orocos
 
 #load log file 
 #######################################################################
-@log_replay = Orocos::Log::Replay.open("../../../../../Log_files/flatfish_logFiles/20150629-1850/linX.log")
+
+#@log_replay = Orocos::Log::Replay.open("../../../../../../../media/joao/1E24C6A424C67E71/AUV_Log_files/Flatfish/20150708-1920/linX.log")
+#@log_replay = Orocos::Log::Replay.open("../../../../../../../media/joao/1E24C6A424C67E71/AUV_Log_files/Flatfish/20150708-1920/linY.log")
+#@log_replay = Orocos::Log::Replay.open("../../../../../../../media/joao/1E24C6A424C67E71/AUV_Log_files/Flatfish/20150708-1920/linZ.log")
+@log_replay = Orocos::Log::Replay.open("../../../../../../../media/joao/1E24C6A424C67E71/AUV_Log_files/Flatfish/20150708-1920/angZ.log")
 
 #######################################################################
 
 Orocos.run 'adap_parameters_estimator::ForceApplier'        => 'forces&torques',
            'adap_parameters_estimator::AdapModelEstimation' => 'adap_model',
-           'adap_samples_input::GetPoseForce'               => 'adap_samples', do
+           'adap_samples_input::GetPoseForce'               => 'adap_samples' do
 
 
     forces_torques      = TaskContext.get 'forces&torques'
@@ -32,7 +36,7 @@ Orocos.run 'adap_parameters_estimator::ForceApplier'        => 'forces&torques',
     
 
     forces_torques.apply_conf_file('config/adap_parameters_estimator::ForceApplier.yml',['flatfish']) 
-    adap_model.apply_conf_file('config/adap_parameters_estimator::AdapModelEstimation.yml',['dagon', 'dagon_surge'])
+    adap_model.apply_conf_file('config/adap_parameters_estimator::AdapModelEstimation.yml',['dagon', 'dagon_yaw'])
     
  
 #    thurster.state_out.connect_to       forces_torques.thruster_samples  
@@ -43,7 +47,7 @@ Orocos.run 'adap_parameters_estimator::ForceApplier'        => 'forces&torques',
     
     adap_model.aggregator_max_latency = 2.0
     adap_model.pose_samples_period = 0.0001
-    adap_model.forces_samples_period = 0.01
+    adap_model.forces_samples_period = 0.0001
     adap_model.sTime = 2.0
     
     forces_torques.configure      
