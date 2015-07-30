@@ -43,7 +43,7 @@ void AdapModelEstimation::pose_samplesCallback(const base::Time &ts, const ::bas
     		transformed_rbs.velocity = transformed_rbs.orientation.inverse() * transformed_rbs.velocity;
     	}
 
-   // std::cout << std::endl << " pose_callback "<< std::endl;
+
     double step;
 	if(handleMeasurement(transformed_rbs, step))
 	{
@@ -66,11 +66,11 @@ bool AdapModelEstimation::configureHook()
 
     Eigen::Matrix<double, 6, 4, Eigen::DontAlign> gainLambda = _gLambda.get();
 	Eigen::Matrix<double, 6, 1, Eigen::DontAlign> gainA		 = _gA.get();
-	max_step												 = _sTime.get();
+	gstep													 = _sTime.get();
 	double frequencyTau										 = _ftau.get();
 	DOFS dof												 = _dofs.get();
 
-	adapParam = new AdapParameters(gainLambda, gainA, dof, max_step, frequencyTau);
+	adapParam = new AdapParameters(gainLambda, gainA, dof, gstep, frequencyTau);
 
 	if (!adapParam->gainsOk)
 	{
@@ -90,6 +90,7 @@ bool AdapModelEstimation::configureHook()
 	modelParameters.gravityAndBuoyancy = base::VectorXd::Zero(6);
 	modelParameters.coriolisCentripetalMatrix = base::MatrixXd::Zero(6,6);
 
+	first_time = true;
 
 	return true;
 
@@ -149,16 +150,17 @@ void AdapModelEstimation::updateHook()
     			std::cout << " queuePose.size "<< queuePose.size() << " queueForces.size "<< queueForces.size() << std::endl;
 
     			adapParam->update_step(step);
-    			std::cout << " step " << step << std::endl;
+    			//std::cout << " step " << step << std::endl;
     			adapParam->parameters_estimation(forces, velocity, parameters, deltaV, normDeltaV);
     			convertParameters(parameters, modelParameters, dof);
+    			modelParameters.time = inputSpeed.time;
 
     			_parameters.write(modelParameters);
     			_deltaV.write(deltaV);
     			_normDeltaV.write(normDeltaV);
     		}
-    	else
-    		std::cout << " NO new sample "<< std::endl;
+/*    	else
+    		std::cout << " NO new sample "<< std::endl;*/
 
     }
 
@@ -287,56 +289,24 @@ bool AdapModelEstimation::handleMeasurement(const base::samples::RigidBodyState 
 
 	if(lastPoseSample.time > rbs_sample.time)
 		{
-			std::cout << "pose.time is Bigger  "<< std::endl;
+			//std::cout << "pose.time is Bigger  "<< std::endl;
 			return false;
 		}
 	if(lastPoseSample.time == rbs_sample.time)
 		{
-			std::cout << "pose.time is Equal  "<< std::endl;
+			//std::cout << "pose.time is Equal  "<< std::endl;
 			return false;
 		}
 
-	static double auxstep2 = 0;
-	double auxstep = (rbs_sample.time - lastPoseSample.time).toSeconds();
-	double deltaVel = (rbs_sample.velocity[0] - lastPoseSample.velocity[0]);
-
-
-	//step = 0.01;
-//	if(step < max_step)
-//		{
-//			adapParam->update_step(step);
-//			std::cout << " step " << step << std::endl;
-////			if(_ftau.get() > 0)
-////				{
-////				int n = (2*3.141592/_ftau.get()) / step;
-////				std::cout << " size queue " << n << std::endl;
-////				}
-//
-//		}
-
-
-
-
-	step = auxstep;
-
-	std::cout << "step "<< step << " delta_Vel "<< deltaVel << std::endl;
-	//step = 0.01;
-	lastPoseSample = rbs_sample;
-
-	//if(auxstep > 1)
-	//	return false;
-
-	//auxstep2 = auxstep2 + auxstep;
-
-	if(auxstep > max_step)
+	if(first_time)
 	{
-		std::cout << "Step too big "<< std::endl;
-		return false;
+		lastPoseSample = rbs_sample;
+		first_time = false;
 	}
 
-	//step = auxstep2;
-	//std::cout << "step2 "<< step << " delta_Vel "<< deltaVel << std::endl;
-	//auxstep2 = 0;
+	step = (rbs_sample.time - lastPoseSample.time).toSeconds();
+
+	lastPoseSample = rbs_sample;
 
 	return true;
 

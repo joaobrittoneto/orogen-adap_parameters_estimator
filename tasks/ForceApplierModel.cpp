@@ -96,6 +96,7 @@ void ForceApplierModel::updateHook()
     ForceApplierModelBase::updateHook();
 
     base::VectorXd			forces;
+    forces.resize(6);
 
     if (_thruster_samples.read(thrusterForces) == RTT::NewData)
     {

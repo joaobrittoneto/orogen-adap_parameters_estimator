@@ -45,7 +45,7 @@ namespace adap_parameters_estimator {
         bool handleModel(const base::samples::RigidBodyState &sample);
         bool handleMeasurement(const base::samples::RigidBodyState &sample);
 
-        bool matchPose(const base::samples::RigidBodyState &model, base::samples::RigidBodyState &measured);
+        bool matchPose(base::samples::RigidBodyState &input, std::queue<base::samples::RigidBodyState> &queue, base::samples::RigidBodyState &output, int &back_queue);
         void checkSizeQueue(std::queue<base::samples::RigidBodyState> queue);
 
     public:

@@ -41,7 +41,8 @@ namespace adap_parameters_estimator {
 		// Aux variables
 		base::samples::RigidBodyState	lastPoseSample;
 		base::samples::Joints			lastForceSample;
-		double max_step;
+		double gstep;
+		double first_time;
 
 		// Output model's parameters
 		Parameters modelParameters;
