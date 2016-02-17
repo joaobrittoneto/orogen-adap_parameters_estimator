@@ -1,0 +1,82 @@
+--- name:default
+
+##################################
+##Stream Aligner Properties
+##################################
+# minimum system time in s between two status readings
+stream_aligner_status_period: 1.0
+# minimum time, in s, between two sequential samples arrive on pose_samples
+pose_samples_period: 0.0001
+# minimum time, in s, between two sequential samples arrive on forces_samples
+forces_samples_period: 0.0001
+# maximum latency, in seconds, of the stream aligner. The aligner will start dropping samples if the difference between the last output and last input is greater than this
+aggregator_max_latency: 0.3
+
+##################################
+## Filter
+##################################
+# Savitzky-Golay filter.
+filter_sav_gol: true
+# degree of polynomial for filter, to get acceleration
+poly: 3.0
+# Position of the computed derivatives. from -halfSize to +halfSize
+pos_filter: 0.0
+# delay of the thruster data and pose_samples
+delay: 0.0
+# half number of samples used to compute derivatives
+number_samples: 41.0
+# Smooth given data (position or velocity).
+smooth: false
+# sample time of pose_sample
+step: 0.1
+# Velocity avalaible, compute acceleration. If false, pose avalaible, compute velocity and acceleration
+velocity_avalible: true
+# no documentation available for this property
+metadata:
+  metadata: []
+  properties: []
+  input_ports: []
+  output_ports: []
+
+--- name:cam_pose
+
+##################################
+##Stream Aligner Properties
+##################################
+# minimum system time in s between two status readings
+stream_aligner_status_period: 0.1
+# minimum time, in s, between two sequential samples arrive on pose_samples
+pose_samples_period: 0.001
+# minimum time, in s, between two sequential samples arrive on forces_samples
+forces_samples_period: 0.001
+# maximum latency, in seconds, of the stream aligner. The aligner will start dropping samples if the difference between the last output and last input is greater than this
+aggregator_max_latency: 2.0
+
+##################################
+## Filter
+##################################
+# Savitzky-Golay filter.
+filter_sav_gol: true
+# degree of polynomial for filter, to get acceleration
+poly: 3.0
+# Position of the computed derivatives. from -halfSize to +halfSize
+pos_filter: 0.0
+# delay of the thruster data and pose_samples
+delay: 0.0
+# half number of samples used to compute derivatives
+number_samples: 11.0 #51 #11.0
+# Smooth given data (position or velocity).
+smooth: false
+# sample time of pose_sample
+step: 0.5
+# Velocity avalaible, compute acceleration. If false, pose avalaible, compute velocity and acceleration
+velocity_avalible: false
+# no documentation available for this property
+
+
+
+
+
+
+
+

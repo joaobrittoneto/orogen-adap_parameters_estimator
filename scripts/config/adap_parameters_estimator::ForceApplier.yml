@@ -139,6 +139,89 @@ thrusterVoltage: 0.0
 # Convert thruster signal into forces, in negative direction. Should have the size of amount_of_actuators
 thruster_coefficients_Neg:
   data: 
+  - 0.00006698667 #0.0000708972833742496 #0.00006698667 # from [rad/s] to [N]
+  - 0.00006698667
+  - 0.00006698667
+  - 0.00006698667
+  - 0.00006698667
+  - 0.00006698667   
+# Convert thruster signal into forces, in positive direction. Should have the size of amount_of_actuators
+thruster_coefficients_Pos:
+  data: 
+  - 0.00006698667 #0.0000657281152690865 #0.00006698667
+  - 0.00006698667
+  - 0.00006698667
+  - 0.00006698667
+  - 0.00006698667 
+  - 0.00006698667
+  
+  
+--- name:flatfish_new
+# Matrix of trhuster. Identifie the forces and torques aplied for each of n trhuster
+TCM:
+  rows: 6
+  cols: 6
+  data:
+  -  1.0 # left_surge
+  -  0.0
+  -  0.0
+  -  0.0
+  -  0.0
+  -  0.392
+  -  -1.0 # right_surge
+  -  0.0
+  -  0.0
+  -  0.0
+  -  0.0 
+  -  0.392
+  -  0.0 # sway_front
+  -  -1.0
+  -  0.0
+  -  0.0
+  -  0.0
+  -  -0.510 #-0.587
+  -  0.0 # sway_rear
+  -  -1.0
+  -  0.0
+  -  0.0
+  -  0.0
+  -  0.896 #0.819
+  -  0.0 # heave_front
+  -  0.0
+  -  1.0
+  -  0.0
+  -  -0.37 #-0.447
+  -  0.0
+  -  0.0 # heave_rear
+  -  0.0
+  -  1.0
+  -  0.0
+  -  0.541 #0.464
+  -  0.0 
+# If left empty, uses RAW by default
+control_modes: 
+  - SPEED
+  - SPEED
+  - SPEED
+  - SPEED
+  - SPEED
+  - SPEED
+# no documentation available for this property
+metadata:
+  metadata: []
+  properties: []
+  input_ports: []
+  output_ports: []
+# Names of the thrusters
+# Leave empty to use no names
+names: ['surge_left', 'surge_right', 'sway_front', 'sway_rear', 'heave_front', 'heave_rear']
+# The amount of actuators the vehicle has
+number_of_thruster: 6
+# In case the control mode is PWM, used to convert the signal into DC Voltage
+thrusterVoltage: 0.0
+# Convert thruster signal into forces, in negative direction. Should have the size of amount_of_actuators
+thruster_coefficients_Neg:
+  data: 
   - 0.00006698667 # from [rad/s] to [N]
   - 0.00006698667
   - 0.00006698667
@@ -153,4 +236,4 @@ thruster_coefficients_Pos:
   - 0.00006698667
   - 0.00006698667
   - 0.00006698667 
-  - 0.00006698667
+  - 0.00006698667  

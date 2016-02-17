@@ -1,8 +1,8 @@
---- name:dagon
+--- name:default
 # Degree of freedom to be analyzed. If UNINITIALISED the method should identify (TODO: check it)
 #dofs: :SURGE
 # Frequencie of input thruster. Important for filter the parameters
-ftau: 0.2
+ftau: 0.3
 # Gain of model, must be a negative values.
 gA:
   data: 
@@ -50,15 +50,147 @@ metadata:
 # Sample time. Use for filter purpouse and integrator
 sTime: 2.0
 
---- name:dagon_surge 
+--- name:flatfish
+##########################
+#
+# stream aligner parameters
+#
+##########################
+# minimum time, in s, between two sequential samples arrive on pose_samples
+pose_samples_period: 0.0001
+# minimum system time in s between two status readings
+stream_aligner_status_period: 0.01
+# minimum time, in s, between two sequential samples arrive on forces_samples
+forces_samples_period: 0.0001
+# maximum latency, in seconds, of the stream aligner. The aligner will start dropping samples if the difference between the last output and last input is greater than this
+aggregator_max_latency: 5.0
+#########################
+# Degree of freedom to be analyzed. If UNINITIALISED the method should identify (TODO: check it)
+#dofs: :SURGE
+# Frequencie of input thruster. Important for filter the parameters
+ftau: 0.3
+# Gain of model, must be a negative values.
+gA:
+  data: 
+  - -1.0        #surge
+  - -1.0     #sway
+  - -1.0      #heave
+  - -1          #roll
+  - -1          #pitch
+  - -1.0      #yaw
+# Gain of parameters, must have positive values.
+gLambda:
+  rows: 6
+  cols: 4
+  data: 
+  - 0.00001      # Intertia
+  - 0.0001
+  - 0.0001
+  - 1
+  - 1
+  - 0.001
+  - 0.5         # Quadratic damping
+  - 0.5
+  - 0.5
+  - 1
+  - 1
+  - 10000.0
+  - 0.5         # Linear damping
+  - 0.5
+  - 0.5
+  - 1
+  - 1
+  - 5.0
+  - 0.05      # Buoyancy
+  - 0.005
+  - 0.05
+  - 1
+  - 1
+  - 0.05
+# no documentation available for this property
+metadata:
+  metadata: []
+  properties: []
+  input_ports: []
+  output_ports: []
+# Sample time. Use for filter purpouse and integrator
+sTime: 2.0
+
+--- name:flatfish_cam
+##########################
+#
+# stream aligner parameters
+#
+##########################
+# minimum time, in s, between two sequential samples arrive on pose_samples
+pose_samples_period: 0.0001
+# minimum system time in s between two status readings
+stream_aligner_status_period: 2.0
+# minimum time, in s, between two sequential samples arrive on forces_samples
+forces_samples_period: 0.0001
+# maximum latency, in seconds, of the stream aligner. The aligner will start dropping samples if the difference between the last output and last input is greater than this
+aggregator_max_latency: 5.0
+###########################
+# Degree of freedom to be analyzed. If UNINITIALISED the method should identify (TODO: check it)
+#dofs: :SURGE
+# Frequencie of input thruster. Important for filter the parameters
+ftau: 0.3
+# Gain of model, must be a negative values.
+gA:
+  data: 
+  - -1.0        #surge
+  - -1.0      #sway
+  - -1.0      #heave
+  - -1          #roll
+  - -1          #pitch
+  - -1.0      #yaw
+# Gain of parameters, must have positive values.
+gLambda:
+  rows: 6
+  cols: 4
+  data: 
+  - 0.00001      # Intertia
+  - 0.001
+  - 0.00001
+  - 1
+  - 1
+  - 0.001
+  - 0.5         # Quadratic damping
+  - 0.5
+  - 0.5
+  - 1
+  - 1
+  - 1000.0
+  - 0.5         # Linear damping
+  - 0.5
+  - 0.5
+  - 1
+  - 1
+  - 5.0
+  - 0.05      # Buoyancy
+  - 0.05
+  - 0.005
+  - 1
+  - 1
+  - 0.05
+# no documentation available for this property
+metadata:
+  metadata: []
+  properties: []
+  input_ports: []
+  output_ports: []
+# Sample time. Use for filter purpouse and integrator
+sTime: 2.0
+
+--- name:surge 
 dofs: :SURGE 
   
---- name:dagon_sway 
+--- name:sway 
 dofs: :SWAY 
 
---- name:dagon_heave 
+--- name:heave 
 dofs: :HEAVE 
 
---- name:dagon_yaw 
+--- name:yaw 
 dofs: :YAW 
   

@@ -43,6 +43,7 @@ include Orocos
 Orocos.run 'uwv_motion_model::Task'                     => 'motion_model',
            'adap_parameters_estimator::ForceApplierModel'    => 'forces&torques',
            'adap_parameters_estimator::Evaluation'      => 'evaluation' do
+    
            
     widget = Vizkit.default_loader.Plot2d 
     widget2 = Vizkit.default_loader.Plot2d      

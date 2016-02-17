@@ -53,8 +53,8 @@ void Evaluation::measured_velocityCallback(const base::Time &ts, const ::base::s
     if(handleMeasurement(measured))
 	{
 		queueMeasured.push(measured);
-		if(queueMeasured.size() > max_queue_size)
-			queueMeasured.pop();
+/*		if(queueMeasured.size() > max_queue_size)
+			queueMeasured.pop();*/
 	}
 
 	//throw std::runtime_error("Transformer callback for pose_samples not implemented");
@@ -72,6 +72,11 @@ bool Evaluation::configureHook()
     else
 	   {
 		dof = _dof.get();
+
+		while(!queueModel.empty())
+			queueModel.pop();
+		while(!queueMeasured.empty())
+			queueMeasured.pop();
 
 		return true;
 	   }
@@ -102,22 +107,29 @@ void Evaluation::updateHook()
     base::samples::RigidBodyState inputModel;
     base::samples::RigidBodyState inputMeasured;
 
-    static bool first_time = true;
+    //static bool first_time = true;
 
-
+    // std::cout << "queueMeasured.size(): " << queueMeasured.size() << std::endl;
+   // std::cout << "queueModel.size(): " << queueModel.size() << std::endl;
 
 	if(!queueMeasured.empty() && !queueModel.empty())
 	{
-		// Don't get the first model sample. Delay analysis by one sample in order to get a better matchPose
-		if(first_time)
-			{first_time = false;}
-		else
-		{
-			inputModel = queueModel.front();
-			queueModel.pop();
 
-			if(matchPose(inputModel, inputMeasured))
+	 //   std::cout << "Evaluation::updateHook 1" << std::endl;
+/*		// Don't get the firmatchPosest model sample. Delay analysis by one sample in order to get a better matchPose
+		if(first_time)
+			{first_time = false;}*/
+		/*else*/
+		{
+	    	inputMeasured = queueMeasured.front();
+			queueMeasured.pop();
+
+			int back_queue = 0;
+			if(matchPose(inputMeasured, queueModel, inputModel, back_queue))
 			{
+				std::cout << "queuequeueMeasured.size() "<< queueMeasured.size() << " " << std::endl;
+				std::cout << "queueModel.size() before "<< queueModel.size() << " " << std::endl;
+
 
 				std::cout << " new sample "<< (inputModel.time - inputMeasured.time).toSeconds() << " " << std::endl;
 				//std::cout << " queueModel.size "<< queueModel.size() << " queueMeasured.size "<< queueMeasured.size() << std::endl;
@@ -138,6 +150,12 @@ void Evaluation::updateHook()
 				_mae_velocity.write(mae_velocity);
 				_norm_mae_velocity.write(norm_mae_velocity);
 			}
+			while(back_queue > 0 && !queueModel.empty())
+			{
+				queueModel.pop();
+				back_queue--;
+			}
+			std::cout << "queueModel.size() after "<< queueModel.size() << " " << std::endl;
 		}
 	}
 	//else if(queueOfMeasurements.empty() || queueOfModel.empty())
@@ -178,18 +196,19 @@ bool Evaluation::handleModel(const base::samples::RigidBodyState &sample)
 
 	if(lastModelSample.time > sample.time)
 		{
-			//std::cout << "model pose.time is Bigger  "<< std::endl;
+			std::cout << "model pose.time is Bigger  "<< std::endl;
 			return false;
 		}
 	if(lastModelSample.time == sample.time)
 		{
-			//std::cout << "model pose.time is Equal  "<< std::endl;
+			std::cout << "model pose.time is Equal  "<< std::endl;
 			return false;
 		}
+	//std::cout << "add sample to model"<< std::endl;
 	double step = (sample.time - lastModelSample.time).toSeconds();
 
 	lastModelSample = sample;
-	std::cout << "step model "<< step << std::endl;
+	//std::cout << "step model "<< step << std::endl;
 
 	return true;
 
@@ -220,57 +239,71 @@ bool Evaluation::handleMeasurement(const base::samples::RigidBodyState &sample)
 	double step = (sample.time - lastMeasuredSample.time).toSeconds();
 
 	lastMeasuredSample = sample;
-	std::cout << "step measured "<< step << std::endl;
+	//std::cout << "step measured "<< step << std::endl;
 
 	return true;
 
 }
 
 
-bool Evaluation::matchPose(const base::samples::RigidBodyState &model, base::samples::RigidBodyState &measured)
+bool Evaluation::matchPose(base::samples::RigidBodyState &input, std::queue<base::samples::RigidBodyState> &queue, base::samples::RigidBodyState &output, int &back_queue)
 {
 	base::samples::RigidBodyState front_pose;
 	base::samples::RigidBodyState behind_pose;
 	behind_pose.time = base::Time::fromSeconds(1);
 	bool stop = false;
-	std::queue<base::samples::RigidBodyState> queueofMeasured = queueMeasured;
+	bool result = false;
+	std::queue<base::samples::RigidBodyState> aux_queue = queue;
+	int useless_data = 0;
+
 	//match force with pose
-	while(!queueofMeasured.empty() && !stop)
+	while(!aux_queue.empty() && !stop)
 	{
-		front_pose = queueofMeasured.front();
-		queueofMeasured.pop();
+		front_pose = aux_queue.front();
+		aux_queue.pop();
 
 		// Pose sample before queue
-		if( (model.time-front_pose.time).toSeconds() < 0 && behind_pose.time == base::Time::fromSeconds(1) )
+		if( (input.time-front_pose.time).toSeconds() < 0 && behind_pose.time == base::Time::fromSeconds(1) )
 		{
+			useless_data = 0;
 			behind_pose = front_pose;
-			measured = front_pose;
-			//std::cout << "sample BEFORE "<< std::endl;
+			output = front_pose;
+			std::cout << "sample BEFORE "<< std::endl;
 			stop = true;
+			result = false;
 		}
 
 		// Pose sample after queue
-		else if ((model.time-front_pose.time).toSeconds() > 0 && queueofMeasured.empty())
-			{
-				measured = front_pose;
-				std::cout << "sample AFTER "<< std::endl;
-				stop = true;
-			}
+		else if ((input.time-front_pose.time).toSeconds() > 0 && aux_queue.empty())
+		{
+			useless_data --;
+			output = front_pose;
+			std::cout << "sample AFTER "<< std::endl;
+			stop = true;
+			result = true;
+		}
 
 		// Pose in the middle of queue
-		if( (model.time-front_pose.time).toSeconds() > 0)
+		else if( (input.time-front_pose.time).toSeconds() > 0)
+		{
+			useless_data ++;
 			behind_pose = front_pose;
+		}
 		else
-			{
-				if((model.time-front_pose.time).toSeconds() > (behind_pose.time - model.time).toSeconds() )
-					measured = front_pose;
-				else
-					measured = behind_pose;
-				std::cout << "sample MIDDLE "<< std::endl;
-				stop = true;
-			}
+		{
+			std::cout << "sample MIDDLE "<< std::endl;
+			if((input.time-front_pose.time).toSeconds() > (behind_pose.time - input.time).toSeconds() )
+				output = front_pose;
+			else
+				output = behind_pose;
+			//std::cout << "sample MIDDLE "<< std::endl;
+			useless_data --;
+			stop = true;
+			result = true;
+		}
 	}
-	return stop;
+	back_queue = useless_data;
+	return result;
 }
 
 
