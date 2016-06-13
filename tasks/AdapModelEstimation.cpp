@@ -242,7 +242,7 @@ bool AdapModelEstimation::getVectorForces(const base::samples::Joints &forces_sa
 {
 	if(forces_sample.elements.size()!=6)
 	{
-		std::cout<<std::endl<< "Make sure the input forces have the right dimention" <<std::endl;
+		std::cout<<std::endl<< "Make sure the input forces have the right dimension" <<std::endl;
 		return false;
 	}
 	else
