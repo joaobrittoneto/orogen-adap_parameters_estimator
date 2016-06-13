@@ -134,7 +134,7 @@ void Task::updateHook()
 				// Converting from base::samples::Joints to base::Vector6d
 				if(inputThruster.elements.size()!=6)
 				{
-					std::cout<<std::endl<< "Make sure the input forces have the right dimention" <<std::endl;
+					std::cout<<std::endl<< "Make sure the input forces have the right dimension" <<std::endl;
 				}
 				for (int i = 0; i < inputThruster.elements.size(); i++)
 					forces[i] = inputThruster.elements[i].effort;
