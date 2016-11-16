@@ -29,7 +29,7 @@ namespace adap_parameters_estimator {
     protected:
 
         // adaptive method
-        adap_parameters_estimator::AdapParameters *adapParam;
+        adap_parameters_estimator::AdapParameters *adap_parameters_estimator;
 
         // Queue of forces and velocities samples
         std::queue<base::samples::RigidBodyState> queuePose;
@@ -44,8 +44,6 @@ namespace adap_parameters_estimator {
 
         bool checkSample(const base::samples::RigidBodyState &rbs_sample);
         bool checkSample(const base::LinearAngular6DCommand &effort_samples);
-
-        std::pair<uint, base::LinearAngular6DCommand> matchEffort(const base::samples::RigidBodyState &pose_sample);
 
         base::Vector6d getVector(const base::LinearAngular6DCommand &effort);
         base::Vector6d getVector(const base::samples::RigidBodyState &pose);

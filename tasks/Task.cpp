@@ -22,6 +22,7 @@ Task::Task(std::string const& name, RTT::ExecutionEngine* engine)
 
 Task::~Task()
 {
+    delete adap_parameters_estimator;
 }
 
 void Task::effort_samplesCallback(const base::Time &ts, const ::base::LinearAngular6DCommand &effort_samples)
@@ -62,7 +63,7 @@ bool Task::configureHook()
     if (! TaskBase::configureHook())
         return false;
 
-    adapParam = new AdapParameters(_gain_lambda.get(), _gain_a.get(), TaskContext::getPeriod());
+    adap_parameters_estimator = new AdapParameters(_gain_lambda.get(), _gain_a.get(), TaskContext::getPeriod());
 	return true;
 
 }
@@ -78,26 +79,26 @@ void Task::updateHook()
 
     if(!queuePose.empty() && !queueEffort.empty())
     {
+        base::LinearAngular6DCommand effort;
         base::samples::RigidBodyState pose;
+        effort = queueEffort.front();
      	pose = queuePose.front();
+        queueEffort.pop();
     	queuePose.pop();
 
-        std::pair<uint, base::LinearAngular6DCommand> effort = matchEffort(pose);
-        while(!effort.first)
-        {
-            queueEffort.pop();
-            effort.first--;
-        }
+        // Check for out of phase samples
+        if(fabs((pose.time-effort.time).toSeconds()) > 1)
+            exception(INPUT_DELAY);
 
         // Update step. In case the pose's periodicity is not constant (eg: using DVL sample)
         if(!_last_processed_pose.toSeconds())
         {
             double step = (pose.time - _last_processed_pose).toSeconds();
-            adapParam->setStep(step);
+            adap_parameters_estimator->setStep(step);
             _last_processed_pose = pose.time;
         }
 
-		base::Vector4d estimated_parameters = adapParam->estimateParameters( getVector(effort.second)[_dof.get()] , getVector(pose)[_dof.get()]);
+		base::Vector4d estimated_parameters = adap_parameters_estimator->estimateParameters( getVector(effort)[_dof.get()] , getVector(pose)[_dof.get()]);
         OneDOFParameters parameters = convertParameters(estimated_parameters);
         parameters.time = pose.time;
         parameters.dof = _dof.get();
@@ -148,50 +149,6 @@ bool Task::checkSample(const base::LinearAngular6DCommand &effort_sample)
             return false;
 	}
 	return true;
-}
-
-std::pair<uint, base::LinearAngular6DCommand> Task::matchEffort(const base::samples::RigidBodyState &pose_sample)
-{
-	base::LinearAngular6DCommand front_effort;
-	base::LinearAngular6DCommand behind_effort;
-    base::LinearAngular6DCommand output_effort;
-	behind_effort.time = base::Time::fromSeconds(1);
-	bool stop = false;
-    uint old_effort = 0;
-	std::queue<base::LinearAngular6DCommand> copyQueueoEffort = queueEffort;
-	//match force with pose
-	while(!copyQueueoEffort.empty() && !stop)
-	{
-		front_effort = copyQueueoEffort.front();
-		copyQueueoEffort.pop();
-
-		// Pose sample before or after queue
-		if( ((pose_sample.time < front_effort.time) && behind_effort.time == base::Time::fromSeconds(1)) ||
-            ((pose_sample.time > front_effort.time) && copyQueueoEffort.empty()) )
-		{   // Check for out of phase samples
-            if(fabs((pose_sample.time-front_effort.time).toSeconds()) > 1)
-                exception(INPUT_DELAY);
-			output_effort = front_effort;
-			stop = true;
-		}
-		// Pose in the middle of queue
-		else if( (pose_sample.time-front_effort.time).toSeconds() <= 0)
-        {
-			if((pose_sample.time-front_effort.time).toSeconds() > (behind_effort.time - pose_sample.time).toSeconds() )
-				output_effort = front_effort;
-			else
-				output_effort = behind_effort;
-			stop = true;
-		}
-		else
-        {
-            behind_effort = front_effort;
-            old_effort++;
-        }
-	}
-    // Let one behind_effort in queue
-    old_effort--;
-	return std::make_pair(old_effort, output_effort);
 }
 
 base::Vector6d Task::getVector(const base::LinearAngular6DCommand &effort)

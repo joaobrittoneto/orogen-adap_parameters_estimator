@@ -46,9 +46,9 @@ task_context "Task" do
     #** Aggregator Parameters *****
     #******************************
     stream_aligner do
-       align_port("pose_samples", 0.01)
-       align_port("effort_samples", 0.01)
-       max_latency(0.1)
+       align_port("pose_samples", 0)
+       align_port("effort_samples", 0)
+       max_latency(10)
     end
 
     exception_states :INPUT_DELAY, :BIG_QUEUE
@@ -96,9 +96,9 @@ task_context "Evaluation" do
   #******************************
   stream_aligner do
 
-     align_port("measured_velocity", 0.09)
-     align_port("model_velocity", 0.09)
-     max_latency(0.2)
+     align_port("measured_velocity", 0)
+     align_port("model_velocity", 0)
+     max_latency(10)
   end
 
   periodic 0.01
