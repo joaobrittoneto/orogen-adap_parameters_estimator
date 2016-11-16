@@ -4,14 +4,12 @@
 #define ADAP_PARAMETERS_ESTIMATOR_TASK_TASK_HPP
 
 #include "adap_parameters_estimator/TaskBase.hpp"
-#include "adap_parameters_estimator/adap_parameters.hpp"
-#include "base/commands/Joints.hpp"
+#include "adap_parameters_estimator/AdapParameters.hpp"
 #include "base/samples/RigidBodyState.hpp"
-#include "adap_samples_input/samples_dataType.h"
 
 namespace adap_parameters_estimator {
 
-    /*! \class Task 
+    /*! \class Task
      * \brief The task context provides and requires services. It uses an ExecutionEngine to perform its functions.
      * Essential interfaces are operations, data flow ports and properties. These interfaces have been defined using the oroGen specification.
      * In order to modify the interfaces you should (re)use oroGen and rely on the associated workflow.
@@ -23,18 +21,36 @@ namespace adap_parameters_estimator {
          task('custom_task_name','adap_parameters_estimator::Task')
      end
      \endverbatim
-     *  It can be dynamically adapted when the deployment is called with a prefix argument. 
+     *  It can be dynamically adapted when the deployment is called with a prefix argument.
      */
     class Task : public TaskBase
     {
 	friend class TaskBase;
     protected:
 
-		// adaptive method
-		adap_parameters_estimator::AdapParameters *adapParam;
+        // adaptive method
+        adap_parameters_estimator::AdapParameters *adapParam;
 
-		bool aligned_data;
-		bool body_forces;
+        // Queue of forces and velocities samples
+        std::queue<base::samples::RigidBodyState> queuePose;
+        std::queue<base::LinearAngular6DCommand> queueEffort;
+        int size_queue = 50;
+
+        base::Time	_last_received_pose;
+        base::Time	_last_processed_pose;
+
+        virtual void effort_samplesCallback(const base::Time &ts, const ::base::LinearAngular6DCommand &effort_samples);
+        virtual void pose_samplesCallback(const base::Time &ts, const ::base::samples::RigidBodyState &pose_samples);
+
+        bool checkSample(const base::samples::RigidBodyState &rbs_sample);
+        bool checkSample(const base::LinearAngular6DCommand &effort_samples);
+
+        std::pair<uint, base::LinearAngular6DCommand> matchEffort(const base::samples::RigidBodyState &pose_sample);
+
+        base::Vector6d getVector(const base::LinearAngular6DCommand &effort);
+        base::Vector6d getVector(const base::samples::RigidBodyState &pose);
+
+        OneDOFParameters convertParameters(const base::Vector4d &parameters);
 
     public:
         /** TaskContext constructor for Task
@@ -43,10 +59,10 @@ namespace adap_parameters_estimator {
          */
         Task(std::string const& name = "adap_parameters_estimator::Task");
 
-        /** TaskContext constructor for Task 
-         * \param name Name of the task. This name needs to be unique to make it identifiable for nameservices. 
-         * \param engine The RTT Execution engine to be used for this task, which serialises the execution of all commands, programs, state machines and incoming events for a task. 
-         * 
+        /** TaskContext constructor for Task
+         * \param name Name of the task. This name needs to be unique to make it identifiable for nameservices.
+         * \param engine The RTT Execution engine to be used for this task, which serialises the execution of all commands, programs, state machines and incoming events for a task.
+         *
          */
         Task(std::string const& name, RTT::ExecutionEngine* engine);
 
@@ -83,7 +99,7 @@ namespace adap_parameters_estimator {
          *
          * The error(), exception() and fatal() calls, when called in this hook,
          * allow to get into the associated RunTimeError, Exception and
-         * FatalError states. 
+         * FatalError states.
          *
          * In the first case, updateHook() is still called, and recover() allows
          * you to go back into the Running state.  In the second case, the
@@ -116,4 +132,3 @@ namespace adap_parameters_estimator {
 }
 
 #endif
-
