@@ -79,12 +79,13 @@ void Task::updateHook()
 
     if(!queuePose.empty() && !queueEffort.empty())
     {
-        base::LinearAngular6DCommand effort;
         base::samples::RigidBodyState pose;
+        pose = queuePose.front();
+        queuePose.pop();
+
+        base::LinearAngular6DCommand effort;
         effort = queueEffort.front();
-     	pose = queuePose.front();
         queueEffort.pop();
-    	queuePose.pop();
 
         // Check for out of phase samples
         if(fabs((pose.time-effort.time).toSeconds()) > 1)
@@ -105,10 +106,11 @@ void Task::updateHook()
 
 		_parameters.write(parameters);
 
-        double deltaV =0;
-        double normDeltaV =0;
-		_deltaV.write(deltaV);
-		_normDeltaV.write(normDeltaV);
+        ErrorVelocity error;
+        error.error_velocity = adap_parameters_estimator->getDeltaVelocity();
+        error.time = parameters.time;
+        error.dof = parameters.dof;
+		_error.write(error);
 
     }
 
@@ -120,6 +122,7 @@ void Task::errorHook()
 void Task::stopHook()
 {
     TaskBase::stopHook();
+    adap_parameters_estimator->resetStates();
 }
 void Task::cleanupHook()
 {

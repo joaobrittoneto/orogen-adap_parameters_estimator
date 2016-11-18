@@ -3,6 +3,7 @@ name "adap_parameters_estimator"
 using_library "adap_parameters_estimator"
 
 import_types_from "adap_parameters_estimator/DataTypes.hpp"
+import_types_from "adap_parameters_estimatorTypes.hpp"
 import_types_from "base"
 
 task_context "Task" do
@@ -37,10 +38,7 @@ task_context "Task" do
     output_port "parameters", "adap_parameters_estimator/OneDOFParameters"
 
     # Error of the real velocity and the estimated velocity of the adap_method
-    output_port "deltaV", "double"
-
-    # Normalized error of the real velocity and the estimated velocity of the adap_method
-    output_port "normDeltaV", "double"
+    output_port "error", "adap_parameters_estimator/ErrorVelocity"
 
     #******************************
     #** Aggregator Parameters *****
