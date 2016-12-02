@@ -1,15 +1,13 @@
 /* Generated from orogen/lib/orogen/templates/tasks/Task.hpp */
 
-#ifndef ADAP_PARAMETERS_ESTIMATOR_EVALUATION_TASK_HPP
-#define ADAP_PARAMETERS_ESTIMATOR_EVALUATION_TASK_HPP
+#ifndef ADAP_PARAMETERS_ESTIMATOR_DYNAMICAGGREGATOR_TASK_HPP
+#define ADAP_PARAMETERS_ESTIMATOR_DYNAMICAGGREGATOR_TASK_HPP
 
-#include "adap_parameters_estimator/EvaluationBase.hpp"
-#include "adap_parameters_estimator/AdapParameters.hpp"
-#include <queue>
+#include "adap_parameters_estimator/DynamicAggregatorBase.hpp"
 
-namespace adap_parameters_estimator {
+namespace adap_parameters_estimator{
 
-    /*! \class Evaluation
+    /*! \class DynamicAggregator
      * \brief The task context provides and requires services. It uses an ExecutionEngine to perform its functions.
      * Essential interfaces are operations, data flow ports and properties. These interfaces have been defined using the oroGen specification.
      * In order to modify the interfaces you should (re)use oroGen and rely on the associated workflow.
@@ -18,54 +16,48 @@ namespace adap_parameters_estimator {
      * The name of a TaskContext is primarily defined via:
      \verbatim
      deployment 'deployment_name'
-         task('custom_task_name','adap_parameters_estimator::Evaluation')
+         task('custom_task_name','adap_parameters_estimator::DynamicAggregator')
      end
      \endverbatim
      *  It can be dynamically adapted when the deployment is called with a prefix argument.
      */
-    class Evaluation : public EvaluationBase
+    class DynamicAggregator : public DynamicAggregatorBase
     {
-	friend class EvaluationBase;
+	friend class DynamicAggregatorBase;
     protected:
 
-		adap_parameters_estimator::DOF dof;
+        // Queue of forces, velocities and accelerations samples
+        std::deque<base::samples::RigidBodyState> queuePose;
+        std::deque<uwv_dynamic_model::SecondaryStates> queueAcceleration;
+        std::deque<base::LinearAngular6DCommand> queueEffort;
 
-		// Queue of model and measured samples
-		std::queue<base::samples::RigidBodyState> queueModel;
-		std::queue<base::samples::RigidBodyState> queueMeasured;
-		int max_queue_size	= 100;
+        base::Time	_last_received_pose;
 
-		// Aux variables
-		base::samples::RigidBodyState	lastModelSample;
-		base::samples::RigidBodyState	lastMeasuredSample;
+        virtual void acceleration_samplesCallback(const base::Time &ts, const ::uwv_dynamic_model::SecondaryStates &acceleration_samples_sample);
+        virtual void effort_samplesCallback(const base::Time &ts, const ::base::commands::LinearAngular6DCommand &effort_samples_sample);
+        virtual void pose_samplesCallback(const base::Time &ts, const ::base::samples::RigidBodyState &pose_samples_sample);
 
-        virtual void model_velocityCallback(const base::Time &ts, const ::base::samples::RigidBodyState &model_velocity_sample);
-
-        virtual void measured_velocityCallback(const base::Time &ts, const ::base::samples::RigidBodyState &measured_velocity_sample);
-
-        bool handleModel(const base::samples::RigidBodyState &sample);
-        bool handleMeasurement(const base::samples::RigidBodyState &sample);
-
-        bool matchPose(base::samples::RigidBodyState &input, std::queue<base::samples::RigidBodyState> &queue, base::samples::RigidBodyState &output, int &back_queue);
-        void checkSizeQueue(std::queue<base::samples::RigidBodyState> queue);
+        bool checkSample(const base::samples::RigidBodyState &pose_sample);
+        bool checkSample(const base::LinearAngular6DCommand &effort_sample);
+        bool checkSample(const uwv_dynamic_model::SecondaryStates &accel_sample);
 
     public:
-        /** TaskContext constructor for Evaluation
+        /** TaskContext constructor for DynamicAggregator
          * \param name Name of the task. This name needs to be unique to make it identifiable via nameservices.
          * \param initial_state The initial TaskState of the TaskContext. Default is Stopped state.
          */
-        Evaluation(std::string const& name = "adap_parameters_estimator::Evaluation");
+        DynamicAggregator(std::string const& name = "adap_parameters_estimator::DynamicAggregator");
 
-        /** TaskContext constructor for Evaluation
+        /** TaskContext constructor for DynamicAggregator
          * \param name Name of the task. This name needs to be unique to make it identifiable for nameservices.
          * \param engine The RTT Execution engine to be used for this task, which serialises the execution of all commands, programs, state machines and incoming events for a task.
          *
          */
-        Evaluation(std::string const& name, RTT::ExecutionEngine* engine);
+        DynamicAggregator(std::string const& name, RTT::ExecutionEngine* engine);
 
-        /** Default deconstructor of Evaluation
+        /** Default deconstructor of DynamicAggregator
          */
-	~Evaluation();
+	~DynamicAggregator();
 
         /** This hook is called by Orocos when the state machine transitions
          * from PreOperational to Stopped. If it returns false, then the

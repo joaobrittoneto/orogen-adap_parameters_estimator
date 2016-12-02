@@ -13,11 +13,25 @@
 namespace adap_parameters_estimator {
 
     struct ErrorVelocity
-	{
+    {
         DOF dof;
         base::Time time;
         double error_velocity;
-	};
+    };
+
+    struct MachtSampleStatus
+    {
+        bool pop_reference;
+        bool delay_sample;
+        uint pop_queue;
+
+
+        MachtSampleStatus(){
+            pop_reference = true;
+            delay_sample = false;
+            pop_queue = 0;
+        }
+    };
 }
 
 #endif

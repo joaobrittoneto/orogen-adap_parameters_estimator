@@ -9,6 +9,7 @@
   <depend package="base/cmake" />
 
   <depend package="control/adap_parameters_estimator"/>
+  <depend package="control/orogen/uwv_dynamic_model"/>
   <depend package="drivers/orogen/aggregator" />
 
 </package>

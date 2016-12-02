@@ -1,12 +1,64 @@
 name "adap_parameters_estimator"
 
 using_library "adap_parameters_estimator"
+using_library "aggregator"
 
+import_types_from "base"
+import_types_from "aggregator"
 import_types_from "adap_parameters_estimator/DataTypes.hpp"
 import_types_from "adap_parameters_estimatorTypes.hpp"
-import_types_from "base"
+import_types_from "uwv_dynamic_model/uwv_dynamic_modelTypes.hpp"
 
-task_context "Task" do
+task_context "BaseAggregator" do
+    needs_configuration
+    abstract
+
+    #############################################################
+    # Properties
+    #############################################################
+
+    # All samples are agglutinated with this max tolerance window.
+    # If no sample is present in this tolerance, it goes to exception.
+    # Default is 0.5s
+    property "window_tolerance", "base/Time"
+
+    # Buffer size
+    property "max_buffer_size", "int", 100
+
+    exception_states :BIG_QUEUE
+end
+
+task_context "BaseAdapEstimator" do
+    subclasses "BaseAggregator"
+    abstract
+
+    #############################################################
+    # Input
+    #############################################################
+
+    # Forces and torques applied in AUV, in body-frame
+    input_port "effort_samples", "base/LinearAngular6DCommand"
+
+    # Velocities of AUV in body-frame"
+    input_port "pose_samples", "base/samples/RigidBodyState"
+
+    #############################################################
+    # Aggregator Parameters
+    #############################################################
+    stream_aligner do
+        align_port("pose_samples", 0.01)
+        align_port("effort_samples", 0.01)
+        max_latency(10)
+    end
+
+    exception_states :INVALID_ORIENTATION
+
+    port_driven
+end
+
+
+task_context "OneDOFAdapEstimator" do
+    subclasses "BaseAdapEstimator"
     needs_configuration
 
     #############################################################
@@ -15,20 +67,12 @@ task_context "Task" do
 
     # Gain of model, must be a negative values.
     property "gain_a", "double", -1
+
     # Gain of parameters, must have positive values. Default is unitary vector
     property "gain_lambda", "base/Vector4d"
+
     # Degree of freedom to be analyzed.
     property "dof", "adap_parameters_estimator/DOF", :SURGE
-
-    #############################################################
-    # Input
-    #############################################################
-
-    # Samples of thruster actions. Forces and torques applied in AUV, in body-frame
-    input_port "effort_samples", "base/LinearAngular6DCommand"
-
-    # Velocities of AUV in body-frame"
-    input_port "pose_samples", "base/samples/RigidBodyState"
 
     #############################################################
     # Output
@@ -40,65 +84,92 @@ task_context "Task" do
     # Error of the real velocity and the estimated velocity of the adap_method
     output_port "error", "adap_parameters_estimator/ErrorVelocity"
 
-    #******************************
-    #** Aggregator Parameters *****
-    #******************************
-    stream_aligner do
-       align_port("pose_samples", 0)
-       align_port("effort_samples", 0)
-       max_latency(10)
-    end
+    operation("setParameters").
+        argument "initial_parameters", "adap_parameters_estimator/OneDOFParameters"
 
-    exception_states :INPUT_DELAY, :BIG_QUEUE
-
-    periodic 0.01
 end
 
 
-##########################################################################################
-##########################################################################################
-
 task_context "Evaluation" do
+    subclasses "BaseAggregator"
+    needs_configuration
 
-  needs_configuration
-  #************************************************************************************
-  #*****                              PROPERTIES                                  *****
-  #************************************************************************************
+    #############################################################
+    # Properties
+    #############################################################
 
-	# define degree of freedom to be evaluate
-  property "dof", "adap_parameters_estimator/DOF", :SURGE
+    # Degree of freedom to be evaluated
+    property "dof", "adap_parameters_estimator/DOF", :SURGE
 
-  #************************************************************************************
-  #*****                             INPUT PORTS                                  *****
-  #************************************************************************************
+    #############################################################
+    # Input
+    #############################################################
 
-  #Input ports receive the RBS from the model and from the measured velocity and will compare the accurace of the model's parameters.
-  input_port  "model_velocity", "/base/samples/RigidBodyState"
-  input_port  "measured_velocity", "/base/samples/RigidBodyState"
+    # Velocity of dynamic model.
+    input_port  "model_velocity", "/base/samples/RigidBodyState"
 
-  #************************************************************************************
-  #*****                            OUTPUT PORTS                                  *****
-  #************************************************************************************
+    # Measured velocity of vehicle.
+    input_port  "measured_velocity", "/base/samples/RigidBodyState"
 
-  #This output port will provide the error between the two velocities.
-  output_port  "error_velocity", "double"
+    #############################################################
+    # Output
+    #############################################################
 
-  #This output port will provide the Mean Avarage Error (MAE)= mean(|error_velocity|).
-  output_port  "mae_velocity", "double"
+    #This output port will provide the error between the two velocities.
+    output_port  "error_velocity", "double"
 
-  #This output port will provide the normalized MAE = mean(|error_velocity|) / mean(|velocity_measured|).
-  output_port  "norm_mae_velocity", "double"
+    #This output port will provide the Mean Avarage Error (MAE)= mean(|error_velocity|).
+    output_port  "mae_velocity", "double"
 
-  #******************************
-  #** Aggregator Parameters *****
-  #******************************
-  stream_aligner do
+    #This output port will provide the normalized MAE = mean(|error_velocity|) / mean(|velocity_measured|).
+    output_port  "norm_mae_velocity", "double"
 
-     align_port("measured_velocity", 0)
-     align_port("model_velocity", 0)
-     max_latency(10)
-  end
+    #############################################################
+    # Aggregator Parameters
+    #############################################################
+    stream_aligner do
+        align_port("measured_velocity", 0.01)
+        align_port("model_velocity", 0.01)
+        max_latency(0.5)
+    end
 
-  periodic 0.01
+port_driven
+end
 
+
+task_context "DynamicAggregator" do
+    subclasses "BaseAggregator"
+
+    #############################################################
+    # Input
+    #############################################################
+
+    # Forces and torques applied in AUV, in body-frame.
+    input_port "effort_samples", "base/LinearAngular6DCommand"
+
+    # Velocities of AUV in body-frame.
+    input_port "pose_samples", "base/samples/RigidBodyState"
+
+    # Accelerations of AUV in body-frame.
+    input_port "acceleration_samples", "uwv_dynamic_model/SecondaryStates"
+
+    #############################################################
+    # Output
+    #############################################################"
+
+    output_port "dynamic_sample", "uwv_dynamic_model/DynamicStates"
+
+    #############################################################
+    # Aggregator Parameters
+    #############################################################
+    stream_aligner do
+        align_port "pose_samples", 0.01
+        align_port "effort_samples", 0.01
+        align_port "acceleration_samples", 0.01
+        max_latency 20
+    end
+
+    exception_states :INVALID_ORIENTATION
+
+    port_driven
 end

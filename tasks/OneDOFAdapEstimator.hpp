@@ -1,15 +1,14 @@
 /* Generated from orogen/lib/orogen/templates/tasks/Task.hpp */
 
-#ifndef ADAP_PARAMETERS_ESTIMATOR_EVALUATION_TASK_HPP
-#define ADAP_PARAMETERS_ESTIMATOR_EVALUATION_TASK_HPP
+#ifndef ADAP_PARAMETERS_ESTIMATOR_ONEDOFADAPESTIMATOR_TASK_HPP
+#define ADAP_PARAMETERS_ESTIMATOR_ONEDOFADAPESTIMATOR_TASK_HPP
 
-#include "adap_parameters_estimator/EvaluationBase.hpp"
+#include "adap_parameters_estimator/OneDOFAdapEstimatorBase.hpp"
 #include "adap_parameters_estimator/AdapParameters.hpp"
-#include <queue>
 
-namespace adap_parameters_estimator {
+namespace adap_parameters_estimator{
 
-    /*! \class Evaluation
+    /*! \class OneDOFAdapEstimator
      * \brief The task context provides and requires services. It uses an ExecutionEngine to perform its functions.
      * Essential interfaces are operations, data flow ports and properties. These interfaces have been defined using the oroGen specification.
      * In order to modify the interfaces you should (re)use oroGen and rely on the associated workflow.
@@ -18,54 +17,44 @@ namespace adap_parameters_estimator {
      * The name of a TaskContext is primarily defined via:
      \verbatim
      deployment 'deployment_name'
-         task('custom_task_name','adap_parameters_estimator::Evaluation')
+         task('custom_task_name','adap_parameters_estimator::OneDOFAdapEstimator')
      end
      \endverbatim
      *  It can be dynamically adapted when the deployment is called with a prefix argument.
      */
-    class Evaluation : public EvaluationBase
+    class OneDOFAdapEstimator : public OneDOFAdapEstimatorBase
     {
-	friend class EvaluationBase;
+	friend class OneDOFAdapEstimatorBase;
     protected:
 
-		adap_parameters_estimator::DOF dof;
+        // adaptive method
+        adap_parameters_estimator::AdapParameters *adap_parameters_estimator;
+        
+        base::Vector6d getVector(const base::LinearAngular6DCommand &effort);
+        base::Vector6d getVector(const base::samples::RigidBodyState &pose);
 
-		// Queue of model and measured samples
-		std::queue<base::samples::RigidBodyState> queueModel;
-		std::queue<base::samples::RigidBodyState> queueMeasured;
-		int max_queue_size	= 100;
+        OneDOFParameters convertParameters(const base::Vector4d &parameters);
 
-		// Aux variables
-		base::samples::RigidBodyState	lastModelSample;
-		base::samples::RigidBodyState	lastMeasuredSample;
+        virtual void setParameters(::adap_parameters_estimator::OneDOFParameters const & initial_parameters);
 
-        virtual void model_velocityCallback(const base::Time &ts, const ::base::samples::RigidBodyState &model_velocity_sample);
-
-        virtual void measured_velocityCallback(const base::Time &ts, const ::base::samples::RigidBodyState &measured_velocity_sample);
-
-        bool handleModel(const base::samples::RigidBodyState &sample);
-        bool handleMeasurement(const base::samples::RigidBodyState &sample);
-
-        bool matchPose(base::samples::RigidBodyState &input, std::queue<base::samples::RigidBodyState> &queue, base::samples::RigidBodyState &output, int &back_queue);
-        void checkSizeQueue(std::queue<base::samples::RigidBodyState> queue);
 
     public:
-        /** TaskContext constructor for Evaluation
+        /** TaskContext constructor for OneDOFAdapEstimator
          * \param name Name of the task. This name needs to be unique to make it identifiable via nameservices.
          * \param initial_state The initial TaskState of the TaskContext. Default is Stopped state.
          */
-        Evaluation(std::string const& name = "adap_parameters_estimator::Evaluation");
+        OneDOFAdapEstimator(std::string const& name = "adap_parameters_estimator::OneDOFAdapEstimator");
 
-        /** TaskContext constructor for Evaluation
+        /** TaskContext constructor for OneDOFAdapEstimator
          * \param name Name of the task. This name needs to be unique to make it identifiable for nameservices.
          * \param engine The RTT Execution engine to be used for this task, which serialises the execution of all commands, programs, state machines and incoming events for a task.
          *
          */
-        Evaluation(std::string const& name, RTT::ExecutionEngine* engine);
+        OneDOFAdapEstimator(std::string const& name, RTT::ExecutionEngine* engine);
 
-        /** Default deconstructor of Evaluation
+        /** Default deconstructor of OneDOFAdapEstimator
          */
-	~Evaluation();
+	~OneDOFAdapEstimator();
 
         /** This hook is called by Orocos when the state machine transitions
          * from PreOperational to Stopped. If it returns false, then the
