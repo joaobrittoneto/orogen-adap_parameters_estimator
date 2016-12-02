@@ -1,0 +1,15 @@
+--- name:default
+# Derivatives in body-frame of linear acceleration.
+# Velocities are given in RigidBodyState standart (velocity in world-frame,
+# angular velocity in body-frame).
+# This property is used cause a simple rotation of world-frame acceleration
+# doesn't given the body-frame acceleration
+body_frame: false
+# Half_witdh. (half_width*2 +1) number of samples used.
+half_width: 16
+# Least_square point used. Choose between [-half_witdh, half_witdh]
+least_square_point: 0
+# Savitzky Golay filter properties
+#
+# Order of polynomial
+polynomial_order: 3

@@ -1,0 +1,55 @@
+--- name:surge
+# maximum latency, in seconds, of the stream aligner. The aligner will start dropping samples if the difference between the last output and last input is greater than this
+aggregator_max_latency: 10.0
+# Degree of freedom to be analyzed.
+dof: :SURGE
+# minimum time, in s, between two sequential samples arrive on effort_samples
+effort_samples_period: 0.001
+# Gain of model, must be a negative values.
+gain_a: -1.0
+# Gain of parameters, must have positive values. Default is unitary vector
+gain_lambda:
+  data:
+  - 1e-4
+  - 5e-1
+  - 5e-1
+  - 5e-2
+# Buffer size
+max_buffer_size: 100
+# minimum time, in s, between two sequential samples arrive on pose_samples
+pose_samples_period: 0.001
+# minimum system time in s between two status readings
+stream_aligner_status_period: 1.0
+# All samples are agglutinated with this max tolerance window.
+# If no sample is present in this tolerance, it goes to exception.
+# Default is 0.5s
+window_tolerance:
+  microseconds: 500000
+
+--- name:sway
+# maximum latency, in seconds, of the stream aligner. The aligner will start dropping samples if the difference between the last output and last input is greater than this
+aggregator_max_latency: 10.0
+# Degree of freedom to be analyzed.
+dof: :SWAY
+# minimum time, in s, between two sequential samples arrive on effort_samples
+effort_samples_period: 0.001
+# Gain of model, must be a negative values.
+gain_a: -1.0
+# Gain of parameters, must have positive values. Default is unitary vector
+gain_lambda:
+  data:
+  - 1e-4
+  - 5e-1
+  - 5e-1
+  - 5e-2
+# Buffer size
+max_buffer_size: 100
+# minimum time, in s, between two sequential samples arrive on pose_samples
+pose_samples_period: 0.001
+# minimum system time in s between two status readings
+stream_aligner_status_period: 1.0
+# All samples are agglutinated with this max tolerance window.
+# If no sample is present in this tolerance, it goes to exception.
+# Default is 0.5s
+window_tolerance:
+  microseconds: 500000
