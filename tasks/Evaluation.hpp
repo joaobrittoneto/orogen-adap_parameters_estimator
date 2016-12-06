@@ -28,26 +28,23 @@ namespace adap_parameters_estimator {
 	friend class EvaluationBase;
     protected:
 
-		adap_parameters_estimator::DOF dof;
-
 		// Queue of model and measured samples
-		std::queue<base::samples::RigidBodyState> queueModel;
-		std::queue<base::samples::RigidBodyState> queueMeasured;
-		int max_queue_size	= 100;
+		std::deque<base::samples::RigidBodyState> queueModel;
+		std::deque<base::samples::RigidBodyState> queueMeasured;
+
+        unsigned long int _number_of_samples;
+        // Mean Absolute Error. (MAE)= mean(|error_velocity|)
+        ErrorVelocity6D _mae_vel;
 
 		// Aux variables
-		base::samples::RigidBodyState	lastModelSample;
-		base::samples::RigidBodyState	lastMeasuredSample;
+		base::Time	_last_received_model;
+		base::Time	_last_received_measured;
 
         virtual void model_velocityCallback(const base::Time &ts, const ::base::samples::RigidBodyState &model_velocity_sample);
 
         virtual void measured_velocityCallback(const base::Time &ts, const ::base::samples::RigidBodyState &measured_velocity_sample);
 
-        bool handleModel(const base::samples::RigidBodyState &sample);
-        bool handleMeasurement(const base::samples::RigidBodyState &sample);
-
-        bool matchPose(base::samples::RigidBodyState &input, std::queue<base::samples::RigidBodyState> &queue, base::samples::RigidBodyState &output, int &back_queue);
-        void checkSizeQueue(std::queue<base::samples::RigidBodyState> queue);
+        bool checkSample(const base::samples::RigidBodyState &pose_sample, base::Time last_time);
 
     public:
         /** TaskContext constructor for Evaluation

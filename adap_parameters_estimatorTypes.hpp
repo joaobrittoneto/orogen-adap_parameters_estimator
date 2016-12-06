@@ -19,12 +19,23 @@ namespace adap_parameters_estimator {
         double error_velocity;
     };
 
+    struct ErrorVelocity6D
+    {
+        base::Time time;
+        base::Vector3d linear;
+        base::Vector3d angular;
+
+        ErrorVelocity6D(){
+            linear = base::Vector3d::Zero();
+            angular = base::Vector3d::Zero();
+        }
+    };
+
     struct MachtSampleStatus
     {
         bool pop_reference;
         bool delay_sample;
         uint pop_queue;
-
 
         MachtSampleStatus(){
             pop_reference = true;

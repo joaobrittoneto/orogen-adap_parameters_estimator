@@ -72,7 +72,7 @@ task_context "OneDOFAdapEstimator" do
     property "gain_lambda", "base/Vector4d"
 
     # Degree of freedom to be analyzed.
-    property "dof", "adap_parameters_estimator/DOF", :SURGE
+    property "dof", "adap_parameters_estimator/DOF", :LINEAR_X
 
     #############################################################
     # Output
@@ -95,13 +95,6 @@ task_context "Evaluation" do
     needs_configuration
 
     #############################################################
-    # Properties
-    #############################################################
-
-    # Degree of freedom to be evaluated
-    property "dof", "adap_parameters_estimator/DOF", :SURGE
-
-    #############################################################
     # Input
     #############################################################
 
@@ -116,13 +109,10 @@ task_context "Evaluation" do
     #############################################################
 
     #This output port will provide the error between the two velocities.
-    output_port  "error_velocity", "double"
+    output_port  "error_velocity", "adap_parameters_estimator/ErrorVelocity6D"
 
     #This output port will provide the Mean Avarage Error (MAE)= mean(|error_velocity|).
-    output_port  "mae_velocity", "double"
-
-    #This output port will provide the normalized MAE = mean(|error_velocity|) / mean(|velocity_measured|).
-    output_port  "norm_mae_velocity", "double"
+    output_port  "mae_velocity", "adap_parameters_estimator/ErrorVelocity6D"
 
     #############################################################
     # Aggregator Parameters
